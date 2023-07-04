@@ -268,17 +268,176 @@ void NTT(int *a,bool INTT)
 
 \end{frame}
 
-\subsection{多项式求逆}
+\begin{frame}{多项式求逆}
+    \small
+    给定一个多项式$f(x)$，求一个多项式$g(x)$，使得
+    \begin{equation}
+        f(x)g(x) \equiv 1 \quad (\text{mod} x^n)
+    \end{equation}
 
-\subsection{多项式开方}
+    \vspace{1em}\pause
+    用多项式牛顿迭代的思路。设
+    \begin{equation*}
+        h(g(x))=\frac{1}{g(x)}-f(x)
+    \end{equation*}
 
-\subsection{多项式除法}
+    \pause
+    设$g_0(x)$是方程(2)在$(\text{mod}\;x^{\left\lceil\frac{n}{2}\right\rceil})$意义下的解，由牛顿迭代有：
+    \begin{align*}
+        g(x)&\equiv g_0(x) -\frac{h(g_0(x))}{h'(g_0(x))} \quad (\text{mod}\;x^n)\\
+        &\equiv g_0(x) +\frac{\frac{1}{g_0(x)}-f(x)}{\frac{1}{g_0^2(x)}} \quad (\text{mod}\;x^n)\\
+        &\equiv 2g_0(x)-g_0^2(x)f(x)\quad (\text{mod}\;x^n)
+    \end{align*}
 
-\subsection{多项式取模}
+    FFT优化即可，复杂度$T(n)=T(n/2)+O(n\log n)=O(n\log n)$
+\end{frame}
 
-\subsection{多项式ln}
+\begin{frame}{多项式开方}
+    \small
+    给定一个多项式$f(x)$，求一个多项式$g(x)$，使得
+    \begin{equation}
+        g^2(x) \equiv f(x) \quad (\text{mod} x^n)
+    \end{equation}
+    
+    \vspace{1em}\pause
+    用多项式牛顿迭代的思路。设
+    \begin{equation*}
+        h(g(x))=g^2(x)-f(x)
+    \end{equation*}
 
-\subsection{多项式exp}
+    \pause
+    设$g_0(x)$是方程(3)在$(\text{mod}\;x^{\left\lceil\frac{n}{2}\right\rceil})$意义下的解，由牛顿迭代有：
+    \begin{align*}
+        g(x)&\equiv g_0(x) -\frac{h(g_0(x))}{h'(g_0(x))} \quad (\text{mod}\;x^n)\\
+        &\equiv g_0(x) -\frac{g_0^2(x)-f(x)}{2g_0(x)} \quad (\text{mod}\;x^n)\\
+        &\equiv \frac{1}{2}g_0(x)+\frac{1}{2}g_0^{-1}(x)f(x)\quad (\text{mod}\;x^n)
+    \end{align*}
+
+    需要做一次多项式求逆和一次多项式乘法，复杂度$T(n)=T(n/2)+O(n\log n)=O(n\log n)$
+\end{frame}
+
+\begin{frame}{多项式除法（取模）}
+    \small
+    给定一个$n$次多项式$f(x)$和一个$m(\leq n)$次多项式$g(x)$，求多项式$Q(x),R(x)$，使得
+    \begin{equation}
+        f(x) \equiv Q(x)g(x)+R(x) \quad (\text{mod} x^n)
+    \end{equation}
+
+    且$\text{deg}\;R<m$（类似整数的带余除法）
+
+    \vspace{1em}\pause
+    考虑构造变换：
+    \begin{equation*}
+        f^R(x)=x^{n}f\left(\frac{1}{x}\right)
+    \end{equation*}
+
+    \pause
+    将方程(4)中的$x$替换成$x^{-1}$，并且在两边乘上$x^n$，得到：
+    \begin{equation*}
+        x^nf\left(\frac{1}{x}\right)=x^{n-m}Q\left(\frac{1}{x}\right)x^m g\left(\frac{1}{x}\right) + x^{n-m+1}x^{m-1}R\left(\frac{1}{x}\right)
+    \end{equation*}
+
+    \pause
+    \begin{equation*}
+        \implies f^R(x) = Q^R(x)g^R(x)+x^{n-m+1}R^R(x)
+    \end{equation*}
+\end{frame}
+
+\begin{frame}{多项式除法（取模）}
+    \small
+    \begin{equation*}
+        f^R(x) = Q^R(x)g^R(x)+x^{n-m+1}R^R(x)
+    \end{equation*}
+
+    如果两边模掉$x^{n-m-1}$，就可以消除$R^R(x)$项的影响，而$Q^R(x)$的次数为$(n-m)<(n-m+1)$，所以$Q^R(x)$不受影响\pause，可见
+    \begin{equation*}
+        f^R(x)\equiv Q^R(x)g^R(x)\quad (\text{mod}\; x^{n-m+1})
+    \end{equation*}
+
+    多项式求逆得到$Q^R(x)$，反转得到$Q(x)$，回代方程(4)求出$R(x)$
+\end{frame}
+
+\begin{frame}{多项式ln}
+    \small
+    给定一个多项式$f(x)$，求一个多项式$g(x)$，使得
+    \begin{equation}
+        g(x) \equiv \ln f(x) \quad (\text{mod} x^n)
+    \end{equation}
+    
+    \vspace{1em}\pause
+    求导得
+    \begin{equation*}
+        g'(x) \equiv f'(x)f^{-1}(x) \quad (\text{mod} x^n)
+    \end{equation*}
+
+    依次进行求导、多项式求逆、多项式乘法、积分即可，复杂度$O(n\log n)$
+\end{frame}
+
+\begin{frame}{多项式exp}
+    \small
+    给定一个多项式$f(x)$，保证$[x^0]f(x)=0$，求一个多项式$g(x)$，使得
+    \begin{equation}
+        g(x) \equiv e^{f(x)}=\sum_{k=0}^\infty \frac{f^{k}(x)}{k!} \quad (\text{mod} x^n)
+    \end{equation}
+    
+    \vspace{1em}\pause
+    用多项式牛顿迭代的思路。设
+    \begin{equation*}
+        h(g(x))=\ln g(x)-f(x)
+    \end{equation*}
+
+    \pause
+    设$g_0(x)$是方程(3)在$(\text{mod}\;x^{\left\lceil\frac{n}{2}\right\rceil})$意义下的解，由牛顿迭代有：
+    \begin{align*}
+        g(x)&\equiv g_0(x) -\frac{h(g_0(x))}{h'(g_0(x))} \quad (\text{mod}\;x^n)\\
+        &\equiv g_0(x) -\frac{\ln g_0(x)-f(x)}{g_0^{-1}(x)} \quad (\text{mod}\;x^n)\\
+        &\equiv g_0(x) \left(1-\ln g_0(x) + f(x)\right)\quad (\text{mod}\;x^n)
+    \end{align*}
+
+    需要做一次多项式ln和一次多项式乘法，复杂度$T(n)=T(n/2)+O(n\log n)=O(n\log n)$
+\end{frame}
+
+\begin{frame}{多项式的幂}
+    \small
+    给定正整数$k$和一个多项式$f(x)$，保证$[x^0]f(x)=1$，求一个多项式$g(x)$，使得
+    \begin{equation}
+        g(x) \equiv \left(f(x)\right)^k \quad (\text{mod} x^n)
+    \end{equation}
+    
+    \vspace{1em}\pause
+    注意到
+    \begin{equation*}
+        g(x)=e^{k\ln f(x)}
+    \end{equation*}
+\end{frame}
+
+\begin{frame}{例题选讲}
+    \small
+    求$n$个点带标号的无向简单连通图个数，$n\leq 10^5$，对$998244353$取模
+
+    \vspace{1em}\pause
+    【题解】设$f_n$为答案，$g_n$为$n$个点带标号简单图个数，显然$g_n=2^{\binom{n}{2}}$
+
+    \pause
+    枚举$1$号点所在的连通块大小，得到：
+    \begin{equation*}
+        g_n=\sum_{k=1}^n \binom{n-1}{k-1}f_k g_{n-k}
+    \end{equation*}
+
+    \pause
+    展开组合数，得到
+    \begin{equation*}
+        \frac{g_n}{(n-1)!}=\sum_{k=1}^n \frac{f_k}{(k-1)!} \frac{g_{n-k}}{(n-k)!}
+    \end{equation*}
+
+    \pause
+    设
+    \begin{equation*}
+        G(x)=\sum_{k=1}^\infty \frac{g_n x^n}{(n-1)!},\quad F(x)=\sum_{k=1}^\infty \frac{f_n x^n}{(k-1)!},\quad H(x)=\sum_{k=1}^\infty \frac{g_n x^n}{n!}
+    \end{equation*}
+
+    显然有$G(x)=F(x)H(x)$，$G(x)$与$H(x)$的各项系数直接求出，最后多项式求逆即可。
+\end{frame}
 
 \begin{frame}{例题选讲：P5748 集合划分计数}
     \small
@@ -312,8 +471,6 @@ void NTT(int *a,bool INTT)
     \pause
     由于$F(0)=B_0=1$，可以得到$F(x)=e^{e^x-1}$，多项式exp求出$F(x)$各项系数即可。
 \end{frame}
-
-\subsection{多项式的幂}
 
 \section{多项式的其它应用}
 
