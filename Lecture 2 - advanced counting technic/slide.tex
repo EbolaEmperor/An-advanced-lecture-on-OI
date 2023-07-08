@@ -411,7 +411,67 @@ void NTT(int *a,bool INTT)
     \end{equation*}
 \end{frame}
 
-\begin{frame}{例题选讲}
+\begin{frame}{多项式三角函数}
+    \small
+    给定一个多项式$f(x)$，求$(\text{mod}\; x^n)$意义下的$\sin f(x),\cos f(x),\tan f(x)$.
+    
+    \vspace{1em}\pause
+    根据欧拉公式$e^{ix}=\cos x + i \sin x$，得到
+    \begin{align*}
+        \sin x &= \frac{e^{ix}-e^{-ix}}{2i}\\
+        \cos x &= \frac{e^{ix}+e^{-ix}}{2}
+    \end{align*}
+
+    \pause 将$f(x)$代入得到
+    \begin{align*}
+        \sin f(x) &= \frac{\exp{(if(x))}-\exp{(-if(x))}}{2i}\\
+        \cos f(x) &= \frac{\exp{(if(x))}+\exp{(-if(x))}}{2}\\
+        \tan f(x) &= \sin f(x) \left(\cos f(x)\right)^{-1}
+    \end{align*}
+
+    \pause
+    注意，在对$998244353$取模的意义下，我们取$i^2\equiv -1\;(\text{mod}\; 998244353)$，可以取$i=86583718$或$911660635$
+\end{frame}
+
+\begin{frame}{例题选讲：小朋友和二叉树}
+    \small
+    给定一个$n$个数的集合$c=\{c_1,c_2,...,c_n\}$，其中$1\leq c_i\leq M \leq 10^5$，如果一棵二叉树的每个点权都在集合$c$中，我们就叫它“好树”。现给定$m\leq 10^5$，对每个$k=1,...,m$，求有多少棵权值和为$k$的好树。答案对$998244353$取模。
+
+    \vspace{1em}\pause
+    【题解】设$g_i=[i\in c]$，$f_i$表示有多少颗权值之和为$k$的好树，有：
+    \begin{equation*}
+        f_m=\sum_{k=1}^M g_k \sum_{i=0}^{m-k} f_i f_{m-k-i}
+    \end{equation*}
+
+    为使递推成立，需要令$f_0=1$\pause ，设$F(x),G(x)$分别为$f,g$的普通型生成函数，有
+    \begin{equation*}
+        F(x)=G(x)F^2(x)+1
+    \end{equation*}
+
+    \pause
+    因此
+    \begin{equation*}
+        F(x)=\frac{1\pm \sqrt{1-4G(x)}}{2G(x)}
+    \end{equation*}
+
+    应该选哪个解？
+\end{frame}
+
+\begin{frame}{例题选讲：小朋友和二叉树}
+    \small
+    \begin{equation*}
+        F_1(x)=\frac{1+ \sqrt{1-4G(x)}}{2G(x)},\quad F_2(x)=\frac{1- \sqrt{1-4G(x)}}{2G(x)}
+    \end{equation*}
+
+    注意到$G(0)=0$，$F(0)=1$，根据上面的表达式，$x\to 0$时，$F_1(x)\to \infty$，因此舍弃$F_1$\pause ，从而
+    \begin{equation*}
+        F(x)=F_2(x)=\frac{2}{1+ \sqrt{1-4G(x)}}
+    \end{equation*}
+
+    多项式开根、求逆即可。
+\end{frame}
+
+\begin{frame}{例题选讲：简单连通图计数}
     \small
     求$n$个点带标号的无向简单连通图个数，$n\leq 10^5$，对$998244353$取模
 
@@ -437,6 +497,31 @@ void NTT(int *a,bool INTT)
     \end{equation*}
 
     显然有$G(x)=F(x)H(x)$，$G(x)$与$H(x)$的各项系数直接求出，最后多项式求逆即可。
+\end{frame}
+
+\begin{frame}{例题选讲：竞赛图计数}
+    \small
+    求$n$个点强连通竞赛图的个数，对$998244353$取模，$n\leq 10^5$.
+
+    \vspace{.5em}
+    竞赛图：任意两点之间恰好有一条边的有向图。
+
+    \vspace{1em}\pause
+    【题解】设$f_n$表示$n$个点强连通竞赛图个数，$g_n$表示$n$个点竞赛图个数，显然$g_n=2^{\binom{n}{2}}$，另外我们认为$f_0=0,g_0=1$.
+
+    \pause
+    \vspace{.5em}
+    考虑枚举拓扑序最小的强连通分量大小，注意，这个强连通分量与其他点的连边一定是从这个分量指出去的，所以竞赛图计数归结为两个子问题，从而有
+    \begin{equation*}
+        g_n=\sum_{i=1}^n \binom{n}{i} f_i g_{n-i} \implies \frac{g_n}{n!}=\sum_{i=0}^n \frac{f_i}{i!}\cdot \frac{g_{n-i}}{(n-i)!}
+    \end{equation*}
+
+    \pause
+    \vspace{.5em}
+    设$G(x),F(x)$分别是$g$与$f$的指数型生成函数，即得到$G(x)=F(x)G(x)+1$，于是
+    \begin{equation*}
+        F(x)=1-G^{-1}(x)
+    \end{equation*}
 \end{frame}
 
 \begin{frame}{例题选讲：P5748 集合划分计数}
@@ -471,6 +556,77 @@ void NTT(int *a,bool INTT)
     \pause
     由于$F(0)=B_0=1$，可以得到$F(x)=e^{e^x-1}$，多项式exp求出$F(x)$各项系数即可。
 \end{frame}
+
+\begin{frame}{例题选讲：P4389 付公主的背包}
+    \small
+    有$n$种物品，体积为$v_i$，都有无限件。给定$m$，对于$s\in[1,m]$，求用这些物品恰好装满$s$体积的方案数。
+
+    答案对$998244353$取模，$n,m\leq 10^5$.
+
+    \vspace{1em}\pause
+    【题解】设$f_{i,j}$表示用前$i$种物品恰好填满$j$体积的方案数，有dp：
+    \begin{equation*}
+        f_{i,j}=f_{i-1,j}+f_{i,j-v_i}
+    \end{equation*}
+
+    \pause
+    设$F_i(x)$是$f_{i,1},f_{i,2},...$的普通型生成函数，由dp式得到：
+    \begin{equation*}
+        F_i(x)=F_{i-1}(x)+x^{v_i}F_i(x)\implies F_i(x)=F_{i-1}(x)\frac{1}{1-x^{v^i}}
+    \end{equation*}
+    
+    于是可以得到$f_{n,1},f_{n,2},...$的普通型生成函数：
+    \begin{equation*}
+        F_n(x)=\prod_{i=1}^n \frac{1}{1-x^{v^i}}
+    \end{equation*}
+    
+    这并不好算
+\end{frame}
+
+\begin{frame}{例题选讲：P4389 付公主的背包}
+    \small
+    考虑化乘法为加法，也就是取ln后再exp：
+    \begin{equation*}
+        F_n(x)=\exp \ln \prod_{i=1}^n \frac{1}{1-x^{v^i}}= \exp \sum_{i=1}^n \ln \frac{1}{1-x^{v^i}}
+    \end{equation*}
+
+    \pause
+    对$\ln$项泰勒展开：
+    \begin{equation*}
+        F_n(x)=\exp \sum_{i=1}^n \sum_{j=1}^\infty \frac{x^{jv_i}}{j}
+    \end{equation*}
+
+    \pause
+    事实上，我们只需在$(\text{mod}\; x^m)$下求系数，高次项可以忽略，因此
+    \begin{equation*}
+        F_n(x)=\exp \sum_{i=1}^n \sum_{j=1}^{\left\lfloor \frac{m}{v_i}\right\rfloor} \frac{x^{jv_i}}{j}
+    \end{equation*}
+
+    枚举的复杂度不能保证，还是不能做。
+\end{frame}
+
+\begin{frame}{例题选讲：P4389 付公主的背包}
+    \small
+    不妨将体积相同的物品视为一类，记$b_k$为体积为$k$的物品数量，于是合并同类项得到
+    \begin{equation*}
+        F_n(x)=\exp \sum_{k=1}^m b_k \sum_{j=1}^{\left\lfloor \frac{m}{k}\right\rfloor} \frac{x^{jk}}{j}
+    \end{equation*}
+
+    这个两重求和的复杂度由调和级数保证，是$O(m\log m)$的。最后再求$\exp$即可。
+\end{frame}
+
+\begin{frame}{例题选讲：P7289 Chasse Neige}
+    \small
+    给$T$组询问，每次询问给定两个正整数$n,k$，求有多少个长度为$n$的排列$\pi$满足：
+    \begin{itemize}
+        \item $\pi_1<\pi_2$
+        \item $\pi_{n-1}>\pi_n$
+        \item 恰好存在$k$个位置$i$满足$\pi_{i-1}<\pi_i$且$\pi_i>\pi_{i+1}$
+    \end{itemize}
+
+    答案对$998244353$取模，每次询问保证$n\leq r$，且$r,T\leq 10^5$
+\end{frame}
+
 
 \section{多项式的其它应用}
 
