@@ -615,16 +615,42 @@ void NTT(int *a,bool INTT)
     这个两重求和的复杂度由调和级数保证，是$O(m\log m)$的。最后再求$\exp$即可。
 \end{frame}
 
-\begin{frame}{例题选讲：P7289 Chasse Neige}
+\begin{frame}{例题选讲：节选自 P7289 Chasse Neige}
     \small
-    给$T$组询问，每次询问给定两个正整数$n,k$，求有多少个长度为$n$的排列$\pi$满足：
+    给定$N$，对$n=1,2,...,N$，求有多少个长度为$n$的M型排列$\pi$，即：
     \begin{itemize}
         \item $\pi_1<\pi_2$
         \item $\pi_{n-1}>\pi_n$
-        \item 恰好存在$k$个位置$i$满足$\pi_{i-1}<\pi_i$且$\pi_i>\pi_{i+1}$
+        \item 每个数都交错，即：对于$i=2,3,...,n-1$，$\pi_i$要么比左右两个数都小，要么比左右两个数都大
     \end{itemize}
 
-    答案对$998244353$取模，每次询问保证$n\leq r$，且$r,T\leq 10^5$
+    答案对$998244353$取模，$N\leq 10^5$
+\end{frame}
+
+\begin{frame}{例题选讲：节选自 P7289 Chasse Neige}
+    \small
+    【题解】设$f_n$表示长度为$n$的M型排列个数\pause，枚举数字$n$放的位置$(i+1)$，选$i$个数放左边，剩下的放在右边，两边分别构成M型排列：
+    \begin{equation*}
+        f_n = \sum_{i \text{是奇数}} \binom{n-1}{i}f_i f_{n-1-i}
+    \end{equation*}
+
+    另外，显然$k$为偶数时$f_k=0$；特别地，我们需要$f_1=1$。\pause 设$F(x)$为$f$的指数型生成函数，有：
+    \begin{equation*}
+        F'(x)=F^2(x)+1
+    \end{equation*}
+
+    以及初始条件$F(0)=0$，下面来解这个方程。
+
+    \pause
+    \begin{equation*}
+        \frac{\text{d} F}{\text{d}x}=F^2+1 \quad \implies \frac{\text{d} F}{F^2+1}=\text{d}x \quad \implies \int \frac{\text{d} F}{F^2+1}= \int \text{d}x
+    \end{equation*}
+    \pause
+    \begin{equation*}
+        \implies \arctan F = x+C \quad \implies F(x)=\tan(x+C)
+    \end{equation*}
+
+    由$F(0)=0$可以得到$C=0$，因此$F(x)=\tan x$，多项式求$\tan$即可。
 \end{frame}
 
 
