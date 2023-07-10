@@ -654,11 +654,133 @@ void NTT(int *a,bool INTT)
 \end{frame}
 
 
-\section{多项式的其它应用}
+\section{常系数齐次线性递推}
 
-\subsection{多点求值与快速插值}
+\begin{frame}{问题引入}
+    给定$f_1,...,f_k$，以及数列初值$a_1,...,a_k$，数列通项公式为
+    \begin{equation*}
+        a_n=\sum_{i=1}^k f_i a_{n-i}
+    \end{equation*}
 
-\subsection{常系数齐次线性递推}
+    求$a_n$，答案对$998244353$取模，$n\leq 10^9,k\leq 32000$
+\end{frame}
+
+\begin{frame}{矩阵形式}
+    \small 
+    我们把递推关系写成矩阵形式$\mathbf{y}_n=M\mathbf{y}_{n-1}$，展开为
+    \begin{equation*}
+        \begin{bmatrix}
+            a_{n-k+1}\\
+            a_{n-k+2}\\
+            \vdots\\
+            a_{n-1}\\
+            a_{n}
+        \end{bmatrix}=
+        \begin{bmatrix}
+            0 & 1 & 0 & \cdots & 0\\
+            0 & 0 & 1 & \cdots & 0\\
+            \vdots & \vdots & \vdots & \ddots & \vdots\\
+            0 & 0 & 0 & \cdots & 1\\
+            f_k & f_{k-1} & f_{k-2} & \cdots & f_1
+        \end{bmatrix}
+        \begin{bmatrix}
+            a_{n-k}\\
+            a_{n-k+1}\\
+            \vdots\\
+            a_{n-2}\\
+            a_{n-1}
+        \end{bmatrix}
+    \end{equation*}
+
+    $\mathbf{y}_k$是已知的，我们要求的就是$\mathbf{y}_{n+k-1}=M^{n-1}\mathbf{y}_k$的第一个分量。\pause $M$的特征多项式为
+    \begin{equation*}
+        p(x)=\det (xI-M) = x_k-\sum_{i=1}^k f_i x^{k-i}
+    \end{equation*}
+
+    \pause
+    根据Cayley-Hamilton定理，有
+    \begin{equation*}
+        p(M)=O
+    \end{equation*}
+\end{frame}
+
+\begin{frame}{进一步处理}
+    \small 
+    我们令$f(x)=x^{n-1}$，我们需要求的就是$f(M)=M^{n-1}$。\pause 借助多项式带余除法的思路，设
+    \begin{equation*}
+        f(x)=Q(x)p(x)+R(x)
+    \end{equation*}
+    
+    其中$R(x)$的次数不超过$k-1$，也就是$R(x)=x^{n-1}\mod p(x)$，不妨记$R(x)=\sum_{i=0}^{k-1} r_i x^i$，\pause 将$M$代入，根据$p(M)=O$，得：
+    \begin{equation*}
+        M^n=f(M)=R(M)=\sum_{i=0}^{k-1} r_i M^i
+    \end{equation*}
+
+    怎么求$r_0,...,r_{k-1}$？
+
+    \vspace{1em}
+    \pause 快速幂取模。把快速幂里的运算全部换成多项式运算即可。当$k$较小时，多项式运算可以暴力实现，复杂度$O(k^2\log n)$；当$k$较大时需要NTT优化，复杂度$O(k\log k\log n)$
+\end{frame}
+
+\begin{frame}{进一步处理}
+    \small 
+    现在我们求出了$r_0,...,r_{k-1}$，所以
+    \begin{equation*}
+        \mathbf{y}_{n+k-1}=M^{n-1}\mathbf{y}_k=\sum_{i=0}^{k-1} r_i M^i\mathbf{y}_k=\sum_{i=0}^{k-1} r_i \mathbf{y}_{k+i}
+    \end{equation*}
+
+    \pause 我们只关心$\mathbf{y}_{n+k-1}$的第一个分量$a_n$，由上式子得
+    \begin{equation*}
+        a_n=\sum_{i=0}^{k-1} r_i a_{i+1}
+    \end{equation*}
+
+    $O(k)$即可求出。
+\end{frame}
+
+\begin{frame}{例题选讲：NOI2017 泳池}
+    \small 
+    有一个长度为$N$，高度为$1001$的网格图，每一个格子有$q$的概率是安全的，每个格子是否安全是独立事件。
+    \vspace{.5em}
+
+    如果一个子矩形中的所有格子都是安全的，且它的下边界贴着网格下边界，我们就说这个子矩形是安全的。
+    \vspace{.5em}
+
+    求最大安全子矩形面积为$K$的概率。
+    \vspace{.5em}
+
+    $n\leq 10^9$，$K\leq 10^3$，答案对$998244353$取模。
+\end{frame}
+
+\begin{frame}{例题选讲：NOI2017 泳池}
+    \small 
+    【题解】首先作前缀和差分：求出最大安全子矩形面积不超过$K$的概率，答案记作$Ans(K)$，再求出$Ans(K-1)$，相减即得到答案。
+    \vspace{1em}
+
+    \pause 设$f_n$表示底部宽度为$n$的区域内、右下角的格子是危险的、最大安全子矩形面积不超过$K$的概率；显然$Ans(K)=\frac{f_{n+1}}{1-q}$。
+    \vspace{1em}
+
+    \pause 再设$g_n$表示底部宽度为$n$的区域内、最底下一行格子全都是安全的、最大安全子矩形面积不超过$K$的概率。\pause 枚举最底下一行的最右边一个危险格子出现的位置，得到递推
+    \begin{equation*}
+        f_n=\sum_{i=0}^{\min(k-1,n)}(1-q)g_i f_{n-1-i}
+    \end{equation*}
+
+    \pause 如果$g_0,...,g_{k-1}$已知，这就是个常系数线性递推，数据范围是$k\leq 10^3$，所以直接用暴力方法$O(k^2\log n)$即可。下面考虑求$g$
+\end{frame}
+
+\begin{frame}{例题选讲：NOI2017 泳池}
+    \small 
+    设$h_{i,j}$表示宽为$i$的区域内、最底下$j$行全部安全、自底向上第$j+1$行存在危险格子、最大安全子矩形面积不超过$K$的概率\pause，显然
+    \begin{equation*}
+        g_i=\sum_{j=1}^{\left\lfloor\frac{k}{i}\right\rfloor} h_{i,j}
+    \end{equation*}
+
+    \pause 枚举自底向上第$j+1$行最左边的危险格子的位置，得到转移
+    \begin{equation*}
+        h_{i,j}=\sum_{s=1}^i q^j(1-q) \left(\sum_{t\geq j+1} h_{s-1,t}\right) \left(\sum_{t\geq j} h_{i-s,t}\right)
+    \end{equation*}
+
+    复杂度？\pause 注意到有效状态满足$ij\leq k$，所以调和级数保证了只有$O(k\log k)$个有效状态。再加一个后缀和优化就可以$O(k)$单次转移，总复杂度$O(k^2\log k)$
+\end{frame}
 
 \section{参考文献}
 
