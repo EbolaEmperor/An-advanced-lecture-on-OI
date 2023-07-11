@@ -1,0 +1,85 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A Beamer template for Ritsumeikan University       %
+% Author: Ming-Hao Xu (Xu Minghao)                   %
+% Date:   April 2022.                                %
+% LPPL Licensed.                                     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{beamer}
+\usepackage{hyperref}
+
+\usepackage[UTF8]{ctex}
+\usepackage[T1]{fontenc}
+
+% other packages
+\usepackage{latexsym,amsmath,xcolor,multicol,booktabs,calligra}
+\usepackage{graphicx,pstricks,listings,stackengine}
+\usefonttheme[onlymath]{serif}
+
+% dummy text; remove it when working on this template
+\usepackage{lipsum}
+
+\author{Ebola}
+\title{高级字符串算法：后缀数组与后缀自动机}
+\institute{
+    Institute of Mathematics, \\
+    Zhejiang University.
+}
+\date{July, 2023}
+\usepackage{Ritsumeikan}
+
+% defs
+\def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
+\def\env#1{\texttt{\color{blue}\footnotesize #1}}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{halfgray}{gray}{0.55}
+
+\lstset{
+    basicstyle=\ttfamily\tiny,
+    keywordstyle=\bfseries\color{deepblue},
+    emphstyle=\ttfamily\color{deepred},    % Custom highlighting style
+    stringstyle=\color{deepgreen},
+    numbers=left,
+    numberstyle=\small\color{halfgray},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+}
+
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \tableofcontents[sectionstyle=show,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+\end{frame}
+
+\section{后缀自动机}
+
+\begin{frame}
+\end{frame}
+
+\section{后缀数组}
+
+\section{参考文献}
+
+\begin{frame}[allowframebreaks]
+    \bibliography{ref}
+    \bibliographystyle{ieeetr}
+    \nocite{*} % used here because no citation happens in slides
+    % if there are too many try use：
+    % \tiny\bibliographystyle{alpha}
+\end{frame}
+
+
+\begin{frame}
+    \begin{center}
+        {\Huge\calligra Thank You}
+    \end{center}
+\end{frame}
+
+\end{document}
