@@ -1,0 +1,9 @@
+\frametitle{多项式乘法}
+借助上面的代码，我们可以很轻松地计算多项式乘法
+
+    \begin{lstlisting}[language=c++]
+FFT(a,1);FFT(b,1); //第一步：多点求值（FFT）
+for(int i=0;i<=n;i++) a[i]=a[i]*b[i];  //第二步：各点乘积
+FFT(a,-1); //第三步：多点插值（IFFT）
+for(int i=0;i<=m;i++) printf("%d ",(int)round(a[i].real()/n)); //这里记得要除n
+    \end{lstlisting}

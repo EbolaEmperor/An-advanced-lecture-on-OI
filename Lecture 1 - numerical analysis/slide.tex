@@ -344,12 +344,12 @@
     \pause
     如果$i\leq j$：
     \begin{equation*}
-        E_{i,j}=pE_{i+1,j}+(1-p)E_{\min(i-2,0),j}+1
+        E_{i,j}=pE_{i+1,j}+(1-p)E_{\max(i-2,0),j}+1
     \end{equation*}
 
     如果$i>j$：
     \begin{equation*}
-        E_{i,j}=pE_{i,j+1}+(1-p)E_{i,\min(j-2,0)}+1
+        E_{i,j}=pE_{i,j+1}+(1-p)E_{i,\max(j-2,0)}+1
     \end{equation*}
 
     \pause
@@ -414,6 +414,7 @@
 \end{frame}
 
 \begin{frame}{例题选讲：洛谷P4526}
+  \small
     给定$a$，求
     \begin{equation*}
         \int_0^\infty x^{\frac{a}{x}-x} \text{d}x
@@ -423,7 +424,7 @@
     \begin{figure}
         \begin{minipage}[t]{0.32\textwidth}
             \centering
-            \includegraphics[width=0.95\textwidth]{pic/p4526-2.eps}
+            \includegraphics[width=0.95\textwidth]{pic/p4526-1.eps}
             \caption{$a=1$}
         \end{minipage}
         \begin{minipage}[t]{0.32\textwidth}
@@ -439,7 +440,7 @@
     \end{figure}
 
     \pause
-    【题解】 $x>10$时函数值几乎为$0$，在$[\varepsilon,20]$区间上做辛普森积分即可。注意：$a<0$时积分发散。
+    【题解】 $x>10$时函数值几乎为$0$，在$[\varepsilon,20]$区间上做辛普森积分即可。注意：$a<0$时积分发散（请思考如何证明）。
 \end{frame}
 
 \begin{frame}{例题选讲：最短路期望}
@@ -506,7 +507,7 @@
 
     \pause
     \vspace{1em}
-    求出$f(0),f(1),...,f(k+1)$，然后用拉格朗日插值求$f(n)$即可。复杂度$O(k\log k)$，其中$\log$来自快速幂。
+    求出$f(0),f(1),...,f(k+1)$，然后用拉格朗日插值求$f(n)$即可。复杂度$O(k\log k)$，其中$\log$来自求$f(0),...,f(k+1)$时的快速幂，如果用欧拉筛求$i^k$，可以得到$O(k)$的做法。
 
 \end{frame}
 
@@ -517,17 +518,17 @@
 
     \pause
     \vspace{1em}
-    【题解】 设$f_{u}(i)$表示$u$子树内权值大于等于$i$的方案数
-    \pause
+    【题解】 设$f_{u}(i)$表示$u$子树内权值小于等于$i$的方案数\pause，枚举根节点的权值，得到dp
+    
     \begin{equation*}
-        f_{u}(i)=f_{u}(i+1)+\prod_{u\text{的子结点}v} f_{v}(i)
+        f_{u}(i)=\sum_{k=1}^i \prod_{u\text{的子结点}v} f_{v}(k)
     \end{equation*}
 
     $d$太大了，怎么办？
 
     \pause
     \vspace{1em}
-    $f_1(i)$是关于$i$的$n$次多项式。求出$f_1(1),f_1(2),...,f_1(n+1)$，然后用拉格朗日插值求$f_1(d)$即可。
+    归纳易得$f_u(i)$是关于$i$的$size[u]$次多项式。求出$f_1(1),f_1(2),...,f_1(n+1)$，然后用拉格朗日插值求$f_1(d)$即可。
 \end{frame}
 
 \begin{frame}{[集训队互测 2012] calc}

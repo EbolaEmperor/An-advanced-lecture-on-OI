@@ -294,7 +294,7 @@ void NTT(int *a,bool INTT)
 
 \begin{frame}{多项式开方}
     \small
-    给定一个多项式$f(x)$，求一个多项式$g(x)$，使得
+    给定一个多项式$f(x)$满足$[x^0]f(x)=1$，求一个多项式$g(x)$，使得
     \begin{equation}
         g^2(x) \equiv f(x) \quad (\text{mod} x^n)
     \end{equation}
@@ -359,7 +359,7 @@ void NTT(int *a,bool INTT)
 
 \begin{frame}{多项式ln}
     \small
-    给定一个多项式$f(x)$，求一个多项式$g(x)$，使得
+    给定一个多项式$f(x)$，满足$[x^0]f(x)=1$，求一个多项式$g(x)$，使得
     \begin{equation}
         g(x) \equiv \ln f(x) \quad (\text{mod} x^n)
     \end{equation}
