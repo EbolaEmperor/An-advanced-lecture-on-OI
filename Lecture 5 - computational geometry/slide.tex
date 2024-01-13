@@ -258,6 +258,187 @@ int ConvexHull(Point a[],int n,Point b[]){
     可以 \verb|reverse| 一下，或者直接把上面代码里的 \verb|>=| 改成 \verb|<=|。
 \end{frame}
 
+\begin{frame}{[SDOI2013] 保护出题人}
+\footnotesize
+僵尸从唯一一条笔直道路接近，你们需要在铭铭的房门前放置植物攻击僵尸，避免僵尸碰到房子。
+\vspace{1em}
+
+第一关，一只血量为$a_1$点的僵尸从距离房子$x_1$米处速接近，你们放置了攻击力为$y_1$点/秒的植物进行防御；第二关，在上一关基础上，僵尸队列排头增加一只血量为$a_2$点的僵尸，与后一只僵尸距离$d$米，从距离房$x_2$米处匀速接近，你们重新放置攻击力为$y_2$点/秒的植物；……；第$n$关，僵尸队列共有$n$只僵尸，相邻两只僵尸距离$d$米，排头僵尸血量为$a_n$点，排第二的 僵尸血量$a_{n-1}$，以此类推，排头僵尸从距离房子$x_n$米处匀速接近，其余僵尸跟随排头同时接近，你们重新放置攻击力为$y_n$点/秒的植物。
+
+\vspace{1em}
+每只僵尸直线移动速度均为$1$米/秒，由于植物射击速度远大于僵尸移动速度，可忽略植物子弹在空中的时间。所有僵尸同时出现并接近，因此当一只僵尸死亡后，下一只僵尸立刻开始受到植物子弹的伤害。
+
+\vspace{1em}
+游戏得分取决于你们放置的植物攻击力的总和$\sum \limits _{i=1} ^{n} y_i$，和越小分数越高，为了追求分数上界，你们每关都要放置攻击力尽量小的植物。
+\end{frame}
+
+\begin{frame}{[SDOI2013] 保护出题人}
+    \footnotesize
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{pic/sdoi2013.jpg}
+    \end{figure}
+    图中 $S_i$ 表示 $a_i$ 的前缀和。试着写出 $y_i$ 的表达式：
+    \pause
+    \begin{equation}
+        y_i=\max_{1\leq j\leq i} \frac{S_i-S_{j-1}}{(x_i+i*d)-j*d}.
+    \end{equation}
+    也就是点 $(x_i+i*d,S_i)$ 与 $(j*d,S_{j-1})$ 的连线的斜率。
+\end{frame}
+
+\begin{frame}{[SDOI2013] 保护出题人}
+    \footnotesize
+    现在我们可以写出算法的大致框架：
+
+    \begin{enumerate}
+        \item 将 $(i*d, S_{i-1})$ 加入点集 $P$；
+        \item 在点集 $P$ 中寻找与 $(x_i+i*d,S_i)$ 连线的最大斜率 $k$；
+        \item $ans+=k$；
+        \item $i++$，然后重复第一步。
+    \end{enumerate}
+
+    关键在于第二步如何优化。
+    \pause
+    斜率最大的点一定在 $P$ 的\textbf{下凸壳}中！为什么？
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.6\textwidth]{pic/sdoi2013-2.jpg}
+    \end{figure}
+    如图所示，从 $W$ 向下引一条射线，并逆时针旋转，
+    碰到的第一个点一定是下凸壳的某个顶点。
+\end{frame}
+
+\begin{frame}[fragile]{[SDOI2013] 保护出题人}
+    \footnotesize
+    那么我们只需要维护 $P$ 的下凸壳就行了，
+    因为加入新点的顺序自然地就是从左到右，
+    所以每次加入一个新点，
+    用凸包算法里的 \verb|while| 循环维护一下就好了。
+
+    怎么快速求下凸壳里的最大斜率？
+
+    \vspace{1em}\pause
+    我们记下凸壳顶点为 $P_1,...,P_m$，
+    容易发现 $k_{WP_1},...,k_{WP_m}$ 是先增后减的，
+    所以三分即可。
+\end{frame}
+
+\begin{frame}[fragile]{[SDOI2014] 向量集}
+    \small
+    维护一个向量集合，在线支持以下操作：
+
+    \begin{itemize}
+    \item \verb|A x y|（$|x|,|y| \le 10^8$）：加入向量 $(x,y)$；
+    \item \verb|Q x y l r|（$|x|,|y| \le 10^8$，$1 \le l \le r \le t$，其中 $t$ 为已经加入的向量个数）：询问第 $l$ 个到第 $r$ 个加入的向量与向量 $(x,y)$ 的点积的最大值。
+    \end{itemize}
+
+    集合初始时为空。
+\end{frame}
+
+\begin{frame}[fragile]{[SDOI2014] 向量集}
+    \small
+    我们记 $P_i$ 是第 $i$ 个加入的向量的坐标，
+    并且我们把 $P_i$ 视为一个点。
+    我们记 $Q$ 是询问时输入的向量坐标，
+    同样的我们把 $Q$ 视为一个点。
+    那么我们需要最大化：
+    \begin{equation}
+        \overrightarrow{OP_i}\cdot \overrightarrow{OQ},\quad i\in[l,r].
+    \end{equation}
+
+    \pause 这等价于最大化：
+    \begin{equation}
+        \frac{\overrightarrow{OP_i}\cdot \overrightarrow{OQ}}{|\overrightarrow{OQ}|} ,\quad i\in[l,r].
+    \end{equation}
+
+    而这就是线段 $OP_i$ 在直线 $l_{OQ}$ 上的投影长度。
+    投影长度最大的点一定位于……？
+
+    \pause $P_l,...,P_r$ 的 \textbf{凸包}！（包括上凸壳和下凸壳，因为坐标可能有负的）
+\end{frame}
+
+\begin{frame}[fragile]{[SDOI2014] 向量集}
+    \small
+    维护一个线段树即可，每个节点存储对应区间的上凸壳、下凸壳。
+    询问时直接在线段树节点对应的区间上分别查询，然后取最大值即可。
+    现在问题是如何合并左右儿子的上（下）凸壳？
+
+    \vspace{1em}\pause
+    拿出来 \verb|sort| 一遍显然是不好的，会变成两个 log。
+    但是左右儿子的上（下）凸壳各自是排好序的，所以我们可以\textbf{二路归并}。
+
+    \vspace{1em}\pause
+    注意，合并过程在 \verb|insert| 过程中发生，
+    且只有当 $r==i$ 时才合并该节点的左右儿子的上（下）凸壳
+    （这是因为当 $i<r$ 时，询问操作并不会访问到这个节点的凸包），
+    这样可以保证复杂度是正确的。
+\end{frame}
+
+\begin{frame}{[CERC2014] Mountainous landscape}
+    \small
+    给定平面内一个由点依次连接起来形成的折线 $P_1,P_2,\cdots,P_n$，保证 $x$ 坐标递增。
+    
+    对于折线上的所有线段，找到最小的 $j>i$，使得存在一个在 $P_jP_{j+1}$ 上的点可以被 $P_iP_{i+1}$ 上的任何一个点看到，也就是\textbf{严格}在射线 $P_iP_{i+1}$ 上方。若没有，输出 $0$.
+    
+    多组数据。
+    
+    $2\le n\le 10^5$，坐标均在 $10^9$ 以内。
+\end{frame}
+
+\begin{frame}{[CERC2014] Mountainous landscape}
+    \small
+    仍然考虑用线段树维护上凸壳，这里我们可以提前建树。
+    然后在线段树上二分：
+    \begin{itemize}
+    \pause \item 若左儿子与 $[i+1,n]$ 有交，且左儿子的凸包与射线 $P_{i}P_{i+1}$ 有交，
+    那么往左走；
+    \pause \item 若右儿子的凸包与射线 $P_{i}P_{i+1}$ 有交，
+    那么往右走；
+    \pause \item 否则，说明答案不存在。
+    \end{itemize}
+
+    现在的问题是如何快速判断一个凸包与射线是否相交？
+
+    \pause
+    凸包上边的斜率是递减的，可以二分找到第一个斜率 $\leq k_{P_{i}P_{i+1}}$
+    的边，这条边的左端点是最有可能位于射线 $P_{i}P_{i+1}$ 上方的点，判断即可。
+\end{frame}
+
+\begin{frame}{[HAOI2011] 防线修建（动态凸包）}
+    \small
+    给定平面内 $m$ 个点，你需要支持如下操作：
+    \begin{itemize}
+        \item 询问上凸壳所有边的长度之和；
+        \item 删除一个点。
+    \end{itemize}
+    $m\leq 10^5$，坐标都是 $[0,10^4]$ 中的整数。
+\end{frame}
+
+\begin{frame}{[HAOI2011] 防线修建（动态凸包）}
+    \footnotesize
+    先把所有操作离线，然后倒过来处理操作，即：
+    先把没被删掉的点的凸包求好，
+    然后按删除的顺序反过来把点依次加回去。
+
+    \pause\vspace{.5em}
+    问题是新加的点并不在已有凸壳的右侧，怎么办？
+
+    \pause\vspace{.5em}
+    把凸壳视为两部分，一部分在新加点左侧，一部分在新加点右侧，
+    我们需要二分找到分界点。
+    \pause 对于左侧，按照维护上凸壳的方式弹出一些点；
+    对于右侧，也按照类似的方式弹出一些点；最后加入新点。
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{pic/haoi2011.png}
+    \end{figure}
+
+    \pause 需要一个可以插入点、删除任意点、保序的结构，用 set 即可。
+
+\end{frame}
+
 \section{点与直线}
 
 \begin{frame}[fragile]{判断点与线段的位置关系}
