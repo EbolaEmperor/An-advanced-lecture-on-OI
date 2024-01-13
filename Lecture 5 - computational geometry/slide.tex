@@ -20,7 +20,7 @@
 \usepackage{lipsum}
 
 \author{Ebola}
-\title{计算几何}
+\title{计算几何1：点、向量、直线、凸包}
 \institute{
     Institute of Mathematics, \\
     Zhejiang University.
@@ -123,6 +123,7 @@
 
 
 \begin{frame}[fragile]{向量的叉乘}
+    \small
     二维向量叉乘写作 $\mathbf{a}\times \mathbf{b}$，定义如下：
 \begin{lstlisting}[language=c++]
     double Cross(Vector a,Vector b){return a.x*b.y - a.y*b.x;}
@@ -131,12 +132,15 @@
     \vspace{1em}\pause
     在几何中，叉乘是向量 $\mathbf{a}$ 与 $\mathbf{b}$ 构成的平行四边形的有向面积。
     如果 $\mathbf{b}$ 在 $\mathbf{a}$ 的\textbf{逆时针}方向，
-    结果就是\textbf{正}的；否则就是负的。
+    结果就是\textbf{正}的；逆时针方向就是负的；平行就是零。
 
     \begin{figure}
         \centering
         \includegraphics[width=0.4\textwidth]{pic/cross.png}
     \end{figure}
+
+    \vspace{1em}\pause
+    当向量坐标都是整数时，用叉乘判断向量相对位置没有精度误差！
 \end{frame}
 
 
@@ -248,6 +252,131 @@ int ConvexHull(Point a[],int n,Point b[]){
     return m-1;
 }
     \end{lstlisting}
+
+    \vspace{1em}\pause
+    这样得到的凸包顶点是按顺时针方向排序的，如果要按逆时针方向排序，
+    可以 \verb|reverse| 一下，或者直接把上面代码里的 \verb|>=| 改成 \verb|<=|。
+\end{frame}
+
+\section{点与直线}
+
+\begin{frame}[fragile]{判断点与线段的位置关系}
+    \small
+    考虑如何判断点 $P$ 是否在线段 $AB$ 上。
+    （不要去想斜率，因为算斜率会引入精度误差，而且斜率无穷大时还要特判）
+
+    \vspace{1em}\pause
+    \begin{align}
+        \overrightarrow{AB}\times  \overrightarrow{AP}&=0\\
+        \overrightarrow{PA}\cdot  \overrightarrow{PB}&<0
+    \end{align}
+
+    \vspace{1em}\pause
+    \begin{lstlisting}[language=c++]
+bool PointInSegment(Point p, Point a, Point b){
+    return Cross(b-p, a-p) == 0 && Dot(b-p, a-p) < 0;
+}
+    \end{lstlisting}
+
+    \vspace{1em}\pause
+    其实通过 $\overrightarrow{AB}\times  \overrightarrow{AP}$
+    的符号，我们还可以判断 $P$ 的方位：大于零时，在 $\overrightarrow{AB}$
+    左侧；小于零时，在 $\overrightarrow{AB}$ 右侧。
+\end{frame}
+
+\begin{frame}[fragile]{判断两条线段是否相交}
+    \small
+    考虑如何判断线段 $AB$ 与 线段 $CD$ 是否相交。
+
+    \vspace{1em}\pause
+    两条线段相交当且仅当下面两个条件同时满足：
+    \begin{itemize}
+        \item $A,B$ 在 $l_{CD}$ 的两侧；
+        \item $C,D$ 在 $l_{AB}$ 的两侧。
+    \end{itemize}
+
+    \vspace{1em}\pause
+    \begin{lstlisting}[language=c++]
+bool SegmentProperIntersection(Point a1, Point a2, Point b1, Point b2)
+{
+    long long c1 = Cross(b1-a1, a2-a1);
+    long long c2 = Cross(b2-a1, a2-a1);
+    long long c3 = Cross(a1-b1, b2-b1);
+    long long c4 = Cross(a2-b1, b2-b1);
+    return c1*c2 < 0 && c3 * c4 < 0;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{判断点是否在凸多边形内部}
+    \small
+    考虑如何判断点 $P$ 是否在凸多边形的内部（或者边界上）。
+    其中凸多边形的顶点 $A_1,...,A_n$ 按照逆时针顺序给出。
+
+    \vspace{1em}\pause
+    判断是否在边界上很简单，用刚刚的 \verb|PointInSegment| 即可。
+
+    \vspace{1em}\pause
+    判断是否在内部只需检查以下条件：
+    \begin{equation}
+        \overrightarrow{A_iA_{i+1}}\times  \overrightarrow{A_iP}>0
+    \end{equation}
+    对所有的 $i$ 都成立（当 $i=n$ 时， $i+1$ 用 $1$ 代替）。
+\end{frame}
+
+\begin{frame}{判断点是否在任意多边形内部}
+    \small
+    考虑如何判断点 $P$ 是否在任意多边形的内部（或者边界上）。
+    其中多边形的顶点 $A_1,...,A_n$ 按照逆时针顺序给出。
+
+    \vspace{1em}\pause
+    射线法：从 $P$ 向任意方向引出一条射线，如果射线与多边形边界
+    有奇数个交点，说明在内部，否则就在外部。
+    （写程序时，一般取水平向右的射线）
+\end{frame}
+
+\begin{frame}[fragile]{判断点是否在任意多边形内部}
+    \small
+    \begin{lstlisting}[language=c++]
+bool PointInPolygon(Point p,Point* res,int cnt)
+{
+    int wn=0;
+    for (int i=0;i<cnt;i++)
+    {
+        if(res[i]==p||res[(i+1)%cnt]==p||PointInSegment(p,res[i],res[(i+1)%cnt]))
+            return 1;
+        // 射线法
+        int k=Cross(res[(i+1)%cnt]-res[i],p-res[i]);
+        int d1=res[i].y-p.y;
+        int d2=res[(i+1)%cnt].y-p.y;
+        if(k>0&&d1<=0&&d2>0) wn++;
+        if(k<0&&d2<=0&&d1>0) wn--;
+    }
+    if(wn) return 1;
+    return 0;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{[UVA10256] 判断两个点集能否分离}
+    \small
+    给定两组点集（每组最多 500 个点），问是否存在一条直线能将它们分离？
+
+    \vspace{1em}\pause
+    分别求凸包，转换为两个凸包是否相交的判定问题。
+
+    \vspace{1em}\pause
+    枚举凸包 $A$ 的所有顶点，判断是否在凸包 $B$ 内部，
+    然后反过来再来一次。（这样是否充分？）
+
+    \pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.3\textwidth]{pic/convexInsect.png}
+    \end{figure}
+
+    显然不充分，所以还要枚举凸包 $A$ 与凸包 $B$ 的所有边，
+    然后调用线段相交的判定方法。
 \end{frame}
 
 \begin{frame}
