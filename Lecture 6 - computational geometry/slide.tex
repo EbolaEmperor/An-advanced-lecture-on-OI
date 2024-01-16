@@ -77,6 +77,47 @@
 \end{figure}
 \end{frame}
 
+\begin{frame}{[CERC2016] 凸轮廓线}
+    一些几何图形整齐地在一个网格图上从左往右排成一列。它们占据了连续的一段横行，
+    每个位置恰好一个几何图形。每个图形是以下的三种之一：
+
+    \begin{enumerate}
+        \item 一个恰好充满单个格子的正方形。
+        \item 一个内切于单个格子的圆。
+        \item 一个底边与格子重合的等边三角形。
+    \end{enumerate}
+
+    已知每个格子的边长都为 $1$，请求出这些几何图形的凸包的周长。
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{pic/cerc2016.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{[CERC2016] 凸轮廓线}
+    \small
+    没什么好说的，
+    非常非常复杂的分类讨论，
+    极有可能漏掉一些情况！
+\end{frame}
+
+\begin{frame}{[ECNA2017] Craters（圆的凸包）}
+    给定平面上 $n\;(\leq 200)$ 个圆的圆心坐标、半径，
+    求能够围住所有圆的最短曲线的长度，精确到 $10^{-6}$。
+\end{frame}
+
+\begin{frame}{[ECNA2017] Craters（圆的凸包）}
+    在每个圆上均匀地取 $T$ 个顶点，求这些顶点构成的凸包周长。
+
+    \vspace{1em}
+    $T$ 需要充分大。实测取 $2000$ 即可（比赛时尽量取大，反正 $5000$ 也不会炸）
+
+    \vspace{1em}\pause
+    一个有意思的结论：$T$ 每增大一倍，求得的周长的误差（即与精确周长之差的绝对值）
+    缩小到原来的四分之一。（线性插值的二阶收敛性质）
+\end{frame}
+
 \begin{frame}[fragile]{向量的旋转}
     如果一个向量 $\overrightarrow{v}=(x,y)$，
     现在将它逆时针旋转 $90^\circ$，得到什么？
@@ -183,6 +224,19 @@ double RotatingCalipers(Point *ch, int n){
     \end{lstlisting}
 \end{frame}
 
+\begin{frame}[fragile]{旋转卡壳}
+    \footnotesize
+    还可以进一步优化常数，把两次叉乘简化成一次，\pause 只需要注意到：
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.7\textwidth]{pic/rotation_opt.jpg}
+    \end{figure}
+    \pause
+    \begin{lstlisting}[language=c++]
+while( Cross(ch[i+1]-ch[i], ch[cur%n+1]-ch[cur]) < 0 )
+    \end{lstlisting}
+\end{frame}
+
 \begin{frame}{[HNOI2007] 最小矩形覆盖}
     \small
     给定一些点的坐标，求能够覆盖所有点的最小面积的矩形，
@@ -267,6 +321,32 @@ double RotatingCalipers(Point *ch, int n){
 \begin{frame}{[SCOI2007] 最大土地面积}
     \small
     给定一些点的坐标，选其中四个点，使它们构成的四边形面积最大。
+    
+    \vspace{1em}
+    不超过 $2000$ 个点。（其实 $10^5$ 也能做）
+\end{frame}
+
+\begin{frame}[fragile]{[SCOI2007] 最大土地面积}
+    \small
+    旋转卡壳枚举对角线 $P_uP_v$，然后维护 $a,b$ 分别为
+    $l_{P_uP_v}$ 两侧距离该直线最远的点。下面是确定 $u,v$ 后维护 $a,b$ 的代码。
+
+    \begin{lstlisting}[language=c++]
+void chkmx(int u, int v, int &a, int &b) {
+    while ((a + 1) % n != v && 
+           distance_to_line(p[a+1], p[u], p[v]) > 
+           distance_to_line(p[a], p[u], p[v]))
+        a = (a + 1) % n;
+    while ((b + 1) % n != u && 
+           distance_to_line(p[b+1], p[u], p[v]) > 
+           distance_to_line(p[b], p[u], p[v]))
+        b = (b + 1) % n;
+    ans = max(ans,
+            length(p[u] - p[v]) * 
+            (distance_to_line(p[b], p[u], p[v]) 
+            + distance_to_line(p[a], p[u], p[v])));
+}
+    \end{lstlisting}
 \end{frame}
 
 \begin{frame}{ [SDCPC2023] Computational Geometry}
@@ -397,6 +477,69 @@ double RotatingCalipers(Point *ch, int n){
     这些交点将圆分成若干个圆弧，每个圆弧要么整个露出来，要么整个被挡掉。
     所以只要判断每个圆弧的中点是否位于某个圆 $j\;(>i)$ 内部即可。
     最后将露出来的圆弧长度累加。
+\end{frame}
+
+\begin{frame}{过定点作圆的切线}
+    \small
+    过圆外一点作圆的切线，求两个切点。
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{pic/tangent.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}[fragile]{过定点作圆的切线}
+    \small
+    直接用反正弦函数计算夹角，再由勾股定理计算切线段长度即可。
+    \begin{lstlisting}[language=c++]
+void circleTangent(Point P, double r, Point Q, Point &A, Point &B) {
+    Vector v = Q - P;
+    double c = Length(v);
+    double b = sqrt(c*c - r*r);
+    double theta = asin(r/c);
+    A = Rotate(v, theta) / c * b;
+    B = Rotate(v, -theta) / c * b;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{求两圆的公切线}
+    \small
+    给定两个圆，求外公切线（上）和内公切线（下）。
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{pic/tangentTwoCircle.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{求两圆的公切线}
+    \small
+    注意，需要对圆的位置分类讨论切线是否存在。
+    这里我们假设内外切线都存在，且都有两条，作辅助线：
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{pic/tangentTwoCircleFZ.png}
+    \end{figure}
+
+    算出需要的边长、角度即可。
+\end{frame}
+
+\begin{frame}{三点定圆}
+    \small
+    给出三角形的三个顶点 $(x_i,y_i)\;(i=1,2,3)$，求外接圆（用解析几何）。
+\end{frame}
+
+\begin{frame}{三点定圆}
+    \small
+    设圆心为 $(x,y)$，半径为 $r$，列方程：
+    \begin{equation}
+        (x-x_i)^2 + (y-y_i)^2 = r^2, \quad i=1,2,3.
+    \end{equation}
+    方程 $i\;(i=2,3)$ 减去方程 $1$，得到：
+    \begin{equation}
+        2(x_i-x_1)x + 2(y_i-y_1)y = x_i^2-x_1^2+y_i^2-y_1^2,\quad i=2,3.
+    \end{equation}
+    解线性方程即可得到 $x,y$，再代入方程 $1$ 求出 $r$.
 \end{frame}
 
 \begin{frame}
