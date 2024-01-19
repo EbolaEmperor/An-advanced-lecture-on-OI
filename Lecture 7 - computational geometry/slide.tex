@@ -80,10 +80,123 @@
     给定若干个凸多边形（顶点按逆时针顺序给出），
     求所有凸多边形相交区域的面积。
 
+\end{frame}
+
+\begin{frame}[fragile]{半平面交}
+    \small
+    我们用“有源向量”的形式来储存直线，即保存直线上某一个点（源点）坐标、直线的方向向量。
+
     \vspace{1em}
-    为了方便，我们面朝一个向量所指的方向，将左手侧的区域
-    称为这个向量的“左半平面”。凸多边形的交其实就是很多个
-    向量的左半平面之交。
+    为了方便，我们站在源点，面朝有源向量所指的方向，将左手侧的区域
+    称为这个有源向量的“左半平面”。凸多边形的交其实就是很多个
+    有源向量的左半平面之交。
+
+    \vspace{1em}
+    首先按极角从小到大将所有的有源向量排序，极角可以通过 \verb|atan2(y,x)| 计算，
+    该函数返回一个 $\theta\in(-\pi,\pi],\;\theta=\text{arctan}\frac{y}{x}$.
+
+    如果有极角相同的两个有源向量，我们只保留靠左侧的一个。
+\end{frame}
+
+\begin{frame}[fragile]{半平面交}
+    \footnotesize
+    半平面交是一个凸多边形，所以要维护一个凸壳。
+    并保存凸壳上的所有顶点。
+    新加入一个有源向量 $\overrightarrow{c}$ 时，
+    可能会出现下图所示的情况。
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.4\textwidth]{pic/halfplane_1.png}
+    \end{figure}
+
+    此时为了维护凸壳，要把 $\overrightarrow{b}$ 以及交点 $D$ 弹出。
+    需要一直弹出，直到最后两条直线的交点在 $\overrightarrow{c}$ 左侧为止。
+
+    \pause
+    \begin{lstlisting}[language=c++]
+while(!vertex_que.empty() && !l[i].onleft(vertex_que.back()))
+    vertex_que.pop_back(), line_que.pop_back();
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{半平面交}
+    \footnotesize
+    现在继续加入有源向量 $\overrightarrow{f}$，
+    还有可能会出现下图所示的情况：
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.4\textwidth]{pic/halfplane_2.png}
+    \end{figure}
+
+    即，一开始加入的两条直线的交点 $G$ 落在了 $\overrightarrow{f}$ 右侧。
+    此时要从头开始，弹出 $\overrightarrow{a}$ 以及交点 $G$，一直重复，直到最前面
+    两条直线的交点在 $\overrightarrow{f}$ 左侧为止。
+    
+    \pause
+    \begin{lstlisting}[language=c++]
+while(!vertex_que.empty() && !l[i].onleft(vertex_que.front()))
+    vertex_que.pop_front(), line_que.pop_front();
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{半平面交}
+    \footnotesize
+    现在所有的有源向量都已经加入完毕了，
+    但是可能会出现下图所示的情况：
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.4\textwidth]{pic/halfplane_3.jpg}
+    \end{figure}
+
+    显然，虚线以上的部分是需要弹出的，我们可以借助
+    第一个有源向量来判断，即：若末端的点不在第一个有源向量左侧，
+    则弹出，直到末端的点在其左侧为止。
+
+    \pause
+    \begin{lstlisting}[language=c++]
+while(!vertex_que.empty() && !line_que.front().onleft(vertex_que.back()))
+    vertex_que.pop_back(), line_que.pop_back();
+vertex_que.push_back(line_que.back().crosspoint(line_que.front()));
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{半平面交}
+    \footnotesize
+    完整代码（不含排序和去重）：
+
+    \begin{lstlisting}[language=c++]
+deque<Line> line_que;
+deque<Point> vertex_que;
+
+line_que.push_back(l[0]);
+line_que.push_back(l[1]);
+vertex_que.push_back(l[0].crosspoint(l[1]));
+
+for(int i = 2; i < tot; i++){
+    while(!vertex_que.empty() && !l[i].onleft(vertex_que.back()))
+        vertex_que.pop_back(), line_que.pop_back();
+    while(!vertex_que.empty() && !l[i].onleft(vertex_que.front()))
+        vertex_que.pop_front(), line_que.pop_front();
+    vertex_que.push_back(l[i].crosspoint(line_que.back()));
+    line_que.push_back(l[i]);
+}
+while(!vertex_que.empty() && !line_que.front().onleft(vertex_que.back()))
+    vertex_que.pop_back(), line_que.pop_back();
+vertex_que.push_back(line_que.back().crosspoint(line_que.front()));
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{[SCOI2015] 小凸想跑步}
+    \small
+    小凸晚上喜欢到操场跑步，今天他跑完两圈之后，他玩起了这样一个游戏。
+
+    操场是个凸 $n$ 边形， $n$ 个顶点按照逆时针从 $0$ ∼ $n - 1$ 编号。现在小凸随机站在操场中的某个位置，标记为 $p$ 点。将 $p$ 点与 $n$ 个顶点各连一条边，形成 $n$ 个三角形。如果这时 $p$ 点， $0$ 号点， $1$ 号点形成的三角形的面
+    积是 $n$ 个三角形中最小的一个，小凸则认为这是一次正确站位。
+    
+    现在小凸想知道他一次站位正确的概率是多少。
 \end{frame}
 
 \section{随机增量法}
