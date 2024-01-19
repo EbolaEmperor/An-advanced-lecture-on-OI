@@ -1,0 +1,349 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A Beamer template for Ritsumeikan University       %
+% Author: Ming-Hao Xu (Xu Minghao)                   %
+% Date:   April 2022.                                %
+% LPPL Licensed.                                     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{beamer}
+\usepackage{hyperref}
+
+\usepackage[UTF8]{ctex}
+\usepackage[T1]{fontenc}
+
+% other packages
+\usepackage{latexsym,amsmath,xcolor,multicol,booktabs,calligra}
+\usepackage{graphicx,pstricks,listings,stackengine}
+\usefonttheme[onlymath]{serif}
+
+% dummy text; remove it when working on this template
+\usepackage{lipsum}
+
+\author{Ebola}
+\title{计算几何3：半平面交、随机增量法}
+\institute{
+    Institute of Mathematics, \\
+    Zhejiang University.
+}
+\date{Jan, 2024}
+\usepackage{Ritsumeikan}
+
+% defs
+\def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
+\def\env#1{\texttt{\color{blue}\footnotesize #1}}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{halfgray}{gray}{0.55}
+
+\lstset{
+    basicstyle=\ttfamily\tiny,
+    keywordstyle=\bfseries\color{deepblue},
+    emphstyle=\ttfamily\color{deepred},    % Custom highlighting style
+    stringstyle=\color{deepgreen},
+    numbers=left,
+    numberstyle=\small\color{halfgray},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+}
+
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \tableofcontents[sectionstyle=show,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+\end{frame}
+
+\section{半平面交}
+
+\begin{frame}{半平面交}
+    \small
+    一条直线可以将平面分成两个部分，
+    每个部分都是一个“半平面”。
+
+    \vspace{1em}
+    “半平面交”，顾名思义就是很多个半平面相交的部分。
+    这个区域有可能是无界的，也有可能是有界的。
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.5\textwidth]{pic/halfplane_2.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{[CQOI2006] 凸多边形}
+    \small
+    给定若干个凸多边形（顶点按逆时针顺序给出），
+    求所有凸多边形相交区域的面积。
+
+    \vspace{1em}
+    为了方便，我们面朝一个向量所指的方向，将左手侧的区域
+    称为这个向量的“左半平面”。凸多边形的交其实就是很多个
+    向量的左半平面之交。
+\end{frame}
+
+\section{随机增量法}
+
+\begin{frame}{最小圆覆盖 (P1743)}
+    给定平面上若干个点，求能覆盖所有点的最小圆。
+\end{frame}
+
+\begin{frame}{最小圆覆盖}
+    \footnotesize
+    \textbf{定理1}：最小圆覆盖存在且唯一。
+
+    \vspace{1em}\pause
+    \textbf{定理2}：最小圆要么是以某两个点为直径的圆，
+    要么是某三个点的外接圆。
+
+    \vspace{1em}\pause
+    \textbf{定义}：我们记 $\text{MC}(P_1,...,P_k;Q_1,...,Q_n)$ 表示
+    $P_1,...,P_k,Q_1,...,Q_n$ 的最小圆覆盖，其中 $P_1,...,P_k$ 在圆周上。
+
+    \vspace{1em}\pause
+    \textbf{引理1}：若 $Q_n\notin \text{MC}(\varnothing;Q_1,...,Q_{n-1})$，那么
+    \begin{equation*}
+        \text{MC}(\varnothing;Q_1,...,Q_{n})=\text{MC}(Q_n;Q_1,...,Q_{n-1}).
+    \end{equation*}
+
+    \vspace{1em}\pause
+    \textbf{引理2}：若 $Q_n\notin \text{MC}(P_1;Q_1,...,Q_{n-1})$，那么
+    \begin{equation*}
+        \text{MC}(P_1;Q_1,...,Q_{n})=\text{MC}(P_1,Q_n;Q_1,...,Q_{n-1}).
+    \end{equation*}
+
+    \vspace{1em}\pause
+    \textbf{引理3}：若 $Q_n\notin \text{MC}(P_1,P_2;Q_1,...,Q_{n-1})$，那么
+    \begin{equation*}
+        \text{MC}(P_1,P_2;Q_1,...,Q_{n})=\text{MC}(P_1,P_2,Q_n;Q_1,...,Q_{n-1}).
+    \end{equation*}
+\end{frame}
+
+\begin{frame}{最小圆覆盖}
+    \footnotesize
+    \textbf{引理1}：若 $Q_n\notin \text{MC}(\varnothing;Q_1,...,Q_{n-1})$，那么
+    \begin{equation*}
+        \text{MC}(\varnothing;Q_1,...,Q_{n})=\text{MC}(Q_n;Q_1,...,Q_{n-1}).
+    \end{equation*}
+
+    \vspace{1em}
+    \textbf{证明}：若不然，我们令当前圆为 $\text{MC}(\varnothing;Q_1,...,Q_{n-1})$，
+    让它逐渐变换为 $\text{MC}(\varnothing;Q_1,...,Q_{n})$，过程如下：
+    \begin{enumerate}
+        \item 逐渐增大半径，直到与 $\text{MC}(\varnothing;Q_1,...,Q_{n})$ 大小相同；
+        \item 逐渐平移到 $\text{MC}(\varnothing;Q_1,...,Q_{n})$ 的位置。
+    \end{enumerate} 
+
+    \pause 在第一过程中，原来在圆内的点一直还在圆内；
+    在第二过程中，不可能有原来的点跑出去，否则它就不会再进来了，从而与
+    “覆盖”性质矛盾。
+
+    \pause 但是在第一或第二过程中，一定会有某个时刻，圆周刚好碰到 $Q_n$；
+    这时候当前圆是一个半径不超过 $\text{MC}(\varnothing;Q_1,...,Q_{n})$ 的圆覆盖，
+    且不同于 $\text{MC}(\varnothing;Q_1,...,Q_{n})$；
+    这与最小圆覆盖的唯一性矛盾！
+
+    \vspace{1em}
+    引理2、引理3的证明类似（课上有时间可以证一下）。
+\end{frame}
+
+\begin{frame}{随机增量法}
+    \small
+    现在我们有了理论基础，接下来用随机增量法来求解最小圆覆盖。
+
+    \vspace{1em}\pause
+    “增量法”的意思是将一个问题化为规模刚好小一层的子问题。
+    解决子问题后加入当前的对象。
+
+    \vspace{1em}\pause
+    具体来说，在最小圆覆盖问题中，就是
+    先解决前 $i$ 个点的最小圆覆盖，
+    然后加入第 $i+1$ 个点，并修正答案；
+    一直到加完所有点为止。
+
+    \vspace{1em}\pause
+    “随机增量法”就是先把所有点的顺序打乱，
+    然后做“增量法”。
+\end{frame}
+
+\begin{frame}[fragile]{随机增量法}
+    \footnotesize
+    我们用增量法来求 $\text{MC}(\varnothing;Q_1,...,Q_{n})$，即
+    从 $\text{MC}(\varnothing;Q_1)$ 开始，逐渐增加 $Q_2,...,Q_{n-1}$。
+
+    \vspace{1em}\pause
+    假设现在已经有了 $\text{MC}(\varnothing;Q_1,...,Q_{i-1})$，
+    如果 $Q_i$ 也被它覆盖，那么直接考虑下一个点；否则，根据引理1，
+    我们知道：
+
+    \begin{equation*}
+        \text{MC}(\varnothing;Q_1,...,Q_{i})=\text{MC}(Q_i;Q_1,...,Q_{i-1}).
+    \end{equation*}
+
+    \pause
+    \begin{lstlisting}[language=c++]
+// 增量法计算 MC(空;  Q[1],...,Q[n])
+void getMC_fix0(Point &ans, double &r){
+    ans = Q[1];
+    r = 0;
+    for(int i = 2; i <= n; i++){
+        if(in_circle(Q[i], ans, r)) continue;
+        // 计算 MC(Q[i];  Q[1],...,Q[i-1])
+        getMC_fix1(i, ans, r);
+    }
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{随机增量法}
+    \footnotesize
+    我们用增量法来求 $\text{MC}(Q_i;Q_1,...,Q_{i-1})$，即
+    从 $\text{MC}(Q_i;Q_1)$ 开始，逐渐增加 $Q_2,...,Q_{i-1}$。
+
+    \vspace{1em}\pause
+    当加入一个点 $Q_j$ 时，如果它被 $\text{MC}(Q_i;Q_1,...,Q_{j-1})$ 覆盖，
+    直接考虑下一个点；否则，根据引理2，我们知道：
+    \begin{equation*}
+        \text{MC}(Q_i;Q_1,...,Q_{j})=\text{MC}(Q_i,Q_j;Q_1,...,Q_{j-1}).
+    \end{equation*}
+
+    \pause
+    \begin{lstlisting}[language=c++]
+// 增量法计算 MC(Q[i];  Q[1],...,Q[i-1])
+void getMC_fix1(int i, Point &ans, double &r){
+    ans.x = 0.5 * (Q[i].x + Q[1].x);
+    ans.y = 0.5 * (Q[i].y + Q[1].y);
+    r = Length(Q[i] - Q[1]) / 2;
+    for(int j = 2; j < i; j++){
+        if(in_circle(Q[j], ans, r)) continue;
+        // 计算 MC(Q[i],Q[j];  Q[1],...,Q[j-1])
+        getMC_fix2(i, j, ans, r);
+    }
+}
+    \end{lstlisting}
+\end{frame}
+
+
+\begin{frame}[fragile]{随机增量法}
+    \footnotesize
+    我们用增量法来求 $\text{MC}(Q_i,Q_j;Q_1,...,Q_{j-1})$，
+    即从 $\text{MC}(Q_i,Q_j;\varnothing)$开始，逐渐增加 $Q_1,...,Q_{j-1}$。
+    
+    \vspace{1em}\pause
+    当加入一个点 $Q_k$ 时，如果它被 $\text{MC}(Q_i,Q_j;Q_1,...,Q_{k-1})$ 覆盖，
+    直接考虑下一个点；否则，根据引理3，我们知道：
+    \begin{equation*}
+        \text{MC}(Q_i,Q_j;Q_1,...,Q_{k})=\text{MC}(Q_i,Q_j,Q_k;Q_1,...,Q_{k-1})=\Delta Q_iQ_jQ_k\text{的外接圆}.
+    \end{equation*}
+
+    \pause
+    \begin{lstlisting}[language=c++]
+// 增量法计算 MC(Q[i],Q[j];  Q[1],...,Q[j-1])
+void getMC_fix2(int i, int j, Point &ans, double &r){
+    ans.x = 0.5 * (Q[i].x + Q[j].x);
+    ans.y = 0.5 * (Q[i].y + Q[j].y);
+    r = Length(Q[i] - Q[j]) / 2;
+
+    for(int k = 1; k < j; k++){
+        if(in_circle(Q[k], ans, r)) continue;
+        // 计算 MC(Q[i],Q[j],Q[k];  Q[1],...,Q[k-1])
+        // 由 Q[i], Q[j], Q[k] 的外接圆唯一确定
+        geto(Q[i], Q[j], Q[k], ans, r);
+    }
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{随机增量法}
+    \small
+    一开始必须把所有点的打乱，否则会被善意的出题人卡到 $O(n^3)$。
+
+    \vspace{1em}
+    只要进行了打乱，复杂度是期望 $O(n)$ 的，
+    19世纪就已经有数学家证明了这一点，
+    我们不要求掌握。
+\end{frame}
+
+\begin{frame}{[CF442E] Gena and Second Distance}
+    \small
+    在 $W\times H$ 的矩形内有 $n$ 个特殊点。
+    矩形内任意一点的价值是和它\textbf{第二近}的特殊点的距离，
+    求矩形内价值最大的点的价值。
+
+    \vspace{1em}
+    $W,H\leq 10^6$，$n\leq 1000$
+\end{frame}
+
+\begin{frame}{[CF442E] Gena and Second Distance}
+    \footnotesize
+    如果价值最大的点是 $P$，最大价值是 $r$，
+    这就意味着以 $P$ 为圆心，半径为 $r$ 的圆 （记为 $C(P,r)$）
+    内部\textbf{恰好}有一个特殊点 $S$，边界上 \textbf{至少}
+    有一个特殊点（记其中一个为 $Q$）。
+
+    \vspace{1em}\pause
+    注意到：
+    \begin{itemize}
+        \item $S$ 在 $C(P,r)$ 内部 \textbf{等价于} $P$ 在 $C(S,r)$ 内部；
+        \item $Q$ 在 $C(P,r)$ 边界上 \textbf{等价于} $P$ 在 $C(Q,r)$ 边界上。
+    \end{itemize}
+\end{frame}
+
+\begin{frame}{[CF442E] Gena and Second Distance}
+    \footnotesize
+    我们首先二分 $r$，接下来考虑如何判断答案是否大于等于 $r$。
+    我们不妨来枚举\textbf{边界上的}特殊点 $Q$。
+    设其它的特殊点为 $S_1,...,S_m$，我们希望 $C(Q,r)$ 的边界上
+    存在一个点 $P$，使它至多只在一个 $C(S_i,r)$ 内部。
+    （当然，如果点 $P$ 不在任何一个 $C(S_i,r)$ 内部，说明答案可以大于 $r$）
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.8\textwidth]{pic/cf442e.png}
+    \end{figure}
+    
+    \pause
+    把 $C(S_i,r)$ 与 $C(Q,r)$ 的交点全部求出来，按逆时针排序，
+    做线段覆盖（差分法），检查是否有至多被一条线段覆盖的位置即可。
+
+    \pause
+    复杂度：二分答案、枚举 $Q$、枚举 $S_i$ 求所有交点并排序，$O(\log r \cdot n^2\log n)$
+\end{frame}
+
+\begin{frame}{[CF442E] Gena and Second Distance}
+    \footnotesize
+    这个复杂度过不去，考虑优化。
+
+    \vspace{1em}\pause
+    先枚举，确定某个点为 $Q$，然后二分答案 $r$，
+    接下来一样的求交、排序、判定。对于
+    每一个 $Q$，复杂度是 $O(\log r\cdot n\log n)$。
+    
+    \vspace{1em}\pause
+    现在，看起来外层循环枚举 $Q$ 还有一个 $O(n)$，其实不然。
+    当枚举下一个 $Q$ 时，\textbf{先判断}它的答案能否大于之前的答案 $r$，
+    如果不能，则没必要在这个 $Q$ 里二分答案。
+
+    \vspace{1em}\pause
+    现在，假设以每个特殊点为 $Q$，求得的答案分别为 $r_1,...,r_n$，
+    如果 $r_2,...,r_i$ 均不超过 $r_1$，我们是不会以 $2,...,i$ 为 $Q$ 点进行二分的。
+    换句话说，如果我们以 $j_1,j_2,...,j_k$ 这些点为 $Q$ 进行了二分，
+    那么 $r_{j_1},...,r_{j_k}$ 一定是一个严格上升子序列。
+
+    \vspace{1em}\pause
+    将一个任意序列随机打乱，其最长严格上升子序列的长度期望为 $O(\log n)$。
+    因此，我们的复杂度降低到了 $O(\log r\cdot n\log^2n + n^2\log n)$，
+    后面加的那个 $n^2\log n$ 是因为上面提到的 “先判断……”。
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        {\Huge\calligra Thank You}
+    \end{center}
+\end{frame}
+
+\end{document}
