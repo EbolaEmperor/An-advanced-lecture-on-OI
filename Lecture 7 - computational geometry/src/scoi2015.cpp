@@ -4,7 +4,7 @@ using namespace std;
 struct Point{
     double x, y;
     Point(double x=0, double y=0): x(x), y(y) {}
-} p[1005], vtx[1005];
+} p[200005], vtx[200005];
 typedef Point Vector;
 
 Point operator + (const Point &a, const Point &b){
@@ -46,7 +46,7 @@ struct Line{
         double a2 = cross(b.v, a+v - b.a);
         return a + a1 / (a1 - a2) * v;
     }
-} l[1005];
+} l[200005];
 
 bool operator < (const Line &a, const Line &b){
     double x = a.polar(), y = b.polar();
@@ -105,19 +105,22 @@ double get_area(Point p[], const int &m){
 }
 
 int main(){
-    int n, m;
+    int n;
     scanf("%d", &n);
+    for(int i = 0; i < n; i++)
+        scanf("%lf%lf", &p[i].x, &p[i].y);
     for(int i = 0; i < n; i++){
-        scanf("%d", &m);
-        for(int j = 0; j < m; j++)
-            scanf("%lf%lf", &p[j].x, &p[j].y);
-        for(int j = 0; j < m; j++){
-            l[tot].a = p[j];
-            l[tot].v = p[(j+1)%m] - p[j];
-            tot++;
-        }
+        int j = (i + 1) % n;
+        l[i] = Line(p[i], p[j] - p[i]);
     }
-    m = get_halfplane(l, tot, vtx);
-    printf("%.3lf\n", get_area(vtx, m));
+    for(int i = 1; i < n; i++){
+        int j = (i + 1) % n;
+        double A = p[1].y - p[0].y - p[j].y + p[i].y;
+        double B = p[0].x - p[1].x + p[j].x - p[i].x;
+        double C = cross(p[i], p[j]) - cross(p[0], p[1]);
+        l[n-1+i]= Line(-C / (A * A + B * B) * Point(A, B), Point(B, -A));
+    }
+    int m = get_halfplane(l, 2*n-1, vtx);
+    printf("%.4lf\n", get_area(vtx, m) / get_area(p, n));
     return 0;
 }

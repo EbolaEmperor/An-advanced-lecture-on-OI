@@ -60,6 +60,17 @@
 
 \section{半平面交}
 
+\begin{frame}{基础回顾：直线求交}
+    \small
+    给定两条直线，均用两点式存储。求交点。
+
+    \vspace{1em}\pause
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{pic/lineinsect.jpg}
+    \end{figure}
+\end{frame}
+
 \begin{frame}{半平面交}
     \small
     一条直线可以将平面分成两个部分，
@@ -148,7 +159,7 @@ while(!vertex_que.empty() && !l[i].onleft(vertex_que.front()))
 
     \begin{figure}[H]
         \centering
-        \includegraphics[width=0.4\textwidth]{pic/halfplane_3.jpg}
+        \includegraphics[width=0.35\textwidth]{pic/halfplane_3.jpg}
     \end{figure}
 
     显然，虚线以上的部分是需要弹出的，我们可以借助
@@ -159,6 +170,8 @@ while(!vertex_que.empty() && !l[i].onleft(vertex_que.front()))
     \begin{lstlisting}[language=c++]
 while(!vertex_que.empty() && !line_que.front().onleft(vertex_que.back()))
     vertex_que.pop_back(), line_que.pop_back();
+// 若只剩一条直线，说明半平面交为空；否则，求出第一条和最后一条直线的交点
+if(line_que.size() == 1) return 0;
 vertex_que.push_back(line_que.back().crosspoint(line_que.front()));
     \end{lstlisting}
 \end{frame}
@@ -189,6 +202,44 @@ vertex_que.push_back(line_que.back().crosspoint(line_que.front()));
     \end{lstlisting}
 \end{frame}
 
+\begin{frame}{[POJ 2451] Uyuw's Concert}
+    \small
+    按逆时针顺序给定多边形的顶点坐标（不一定是凸多边形），
+    求多边形内部能够看到所有顶点的区域的面积。（即：多边形的核）
+
+    \vspace{1em}\pause
+    【解】其实就是求多边形所有边左侧的半平面交。
+\end{frame}
+
+\begin{frame}{ [HNOI2008] 水平可见直线}
+    \small
+    在 $x-y$ 直角坐标平面上有 $n$ 条直线 $L_1,L_2,…L_n$，若在 $y$ 值为正无穷大处往下看，能见到 $L_i$ 的某个子线段，则称 $L_i$ 为可见的，否则 $L_i$ 为被覆盖的。
+例如，对于直线:
+$L_1:y=x$;
+$L_2:y=-x$;
+$L_3:y=0$;
+则 $L_1$ 和 $L_2$ 是可见的，$L_3$ 是被覆盖的。给出 $n$ 条直线，表示成 $y=Ax+B$ 的形式($|A|,|B| \le 500000$)，且 $n$ 条直线两两不重合，求出所有可见的直线。
+\end{frame}
+
+\begin{frame}{ [HNOI2008] 水平可见直线}
+    \footnotesize
+    显然，从上往下看能看到的部分一定长这样（图片来自洛谷题解）：
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.7\textwidth]{pic/hnoi2008.png}
+    \end{figure}
+
+    所以把每条直线的上侧做半平面交即可。
+    要记录一下哪些直线在半平面交里。
+
+    \vspace{1em}
+    注意，这题的半平面交是无界的，但我们的算法其实要有界才能跑下去。
+    我们可以加上一条非常远的直线来确保有界，同时不影响答案。
+
+    \vspace{1em}\pause
+    其实这个题不需要半平面交，维护一个斜率的单调栈也能做。
+\end{frame}
+
 \begin{frame}{[SCOI2015] 小凸想跑步}
     \small
     小凸晚上喜欢到操场跑步，今天他跑完两圈之后，他玩起了这样一个游戏。
@@ -196,7 +247,102 @@ vertex_que.push_back(line_que.back().crosspoint(line_que.front()));
     操场是个凸 $n$ 边形， $n$ 个顶点按照逆时针从 $0$ ∼ $n - 1$ 编号。现在小凸随机站在操场中的某个位置，标记为 $p$ 点。将 $p$ 点与 $n$ 个顶点各连一条边，形成 $n$ 个三角形。如果这时 $p$ 点， $0$ 号点， $1$ 号点形成的三角形的面
     积是 $n$ 个三角形中最小的一个，小凸则认为这是一次正确站位。
     
-    现在小凸想知道他一次站位正确的概率是多少。
+    现在小凸想知道他一次站位正确的概率（即符合条件的区域面积占总面积的比）是多少。
+\end{frame}
+
+\begin{frame}{[SCOI2015] 小凸想跑步}
+    \small
+    记第 $i$ 个顶点坐标为 $(x_i,y_i)$，问题可以转化为：
+    \begin{equation}
+        (y_1-y_0-y_{i+1}+y_i)x + (x_0-x_1+x_{i+1}-x_i)y + (x_iy_{i+1}-x_{i+1}y_i-x_0y_1+x_1y_0) > 0
+    \end{equation}
+    对所有 $i=1,...,n-1$ 均成立（当 $i=n-1$ 时，$i+1$ 用 $0$ 代替）。
+
+    \vspace{1em}
+    把半平面的解析表达式转换成“有源向量左半平面”的表示形式，然后求半平面交即可。
+    另外还要记得 $(x,y)$ 必须在凸多边形内部，所以凸多边形的边也要加进来一起做半平面交。
+\end{frame}
+
+\begin{frame}{[SDOI2013] 逃考}
+    \footnotesize
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=\textwidth]{pic/sdoi2013_prb.png}
+    \end{figure}
+    \vspace{-1em}
+    亲戚数量 $\leq 600$.
+\end{frame}
+
+\begin{frame}{[SDOI2013] 逃考}
+    \footnotesize
+    显然，每个亲戚监控的区域是连通的。
+    所以在最优路径下，每跨越一个区域，就会
+    多被一个亲戚监控，不会出现跨出去又跨回来的现象。
+
+    \vspace{1em}\pause
+    我们可以把每个亲戚监控的区域当成一个点，
+    若两个区域相邻，对应的两个点之间就连一条边权为 $1$ 的无向边。
+    若区域和边界相邻，则与终点连一条边权为 $1$ 的无向边。
+    然后跑最短路即可。
+
+    \vspace{1em}
+    现在问题是如何判断两个亲戚的监控区域是否相邻。
+\end{frame}
+
+\begin{frame}{[SDOI2013] 逃考}
+    \footnotesize
+    事实上，亲戚 $A$ 与其它任一亲戚的监控范围，由它们连线的中垂线分开。
+    将这些中垂线靠近亲戚 $A$ 一侧的半平面求交，
+    就得到了亲戚 $A$ 的监控范围，同时也求出了
+    和 $A$ 监控范围相邻的亲戚。
+
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.7\textwidth]{pic/sdoi2013_sol.jpg}
+    \end{figure}
+
+    别忘了还要把矩形的边界加入半平面交。
+\end{frame}
+
+\begin{frame}{[HNOI2012] 射箭}
+    \small
+    给定若干个竖直线段，如果有一条过原点的抛物线 $y=ax^2+bx\;(a<0,b>0)$ 能同时经过
+    前 $i$ 条线段，则可以通过第 $i$ 关。问最多能通过几关。
+
+    \vspace{1em}
+    线段的数量不超过 $10^5$ 条。
+    \begin{figure}[H]
+        \centering
+        \includegraphics[width=0.3\textwidth]{pic/hnoi2012.png}
+    \end{figure}
+\end{frame}
+
+\begin{frame}{[HNOI2012] 射箭}
+    \footnotesize
+    显然，如果能通过第 $i$ 关，就一定可以通过前 $i$ 关。
+    所以可以二分答案。接下来就是判断能否通过第 $i$ 关。
+
+    \vspace{.5em}\pause
+    设抛物线为 $y=ax^2+bx$，第 $i$ 条线段的横坐标为 $x_i$，
+    纵坐标为 $l_i$ 到 $r_i$。那么，第 $i$ 条线段对抛物线的约束为：
+    \begin{align}
+        ax_i^2 + bx_i &\geq l_i,\\
+        ax_i^2 + bx_i &\leq r_i.
+    \end{align}
+
+    \vspace{.5em}\pause
+    我们把 $(a,b)$ 放在平面上，
+    上面的式子其实就是把 $(a,b)$ 约束在了一个半平面中。
+    只需要判断半平面交是否非空即可。
+
+    \vspace{.5em}\pause
+    \textbf{注记1}：注意不要在检查答案 $mid$ 的时候排序去重，这样会变成两个 $\log$，
+    这题比较卡常，过不去。应该先排序（但不能去重），每条直线标记一下编号，
+    检查的时候先去重然后求半平面交，碰到编号大于 $mid$ 的直线就跳过。如果
+    常数实在太大，可以考虑手写双端队列。
+
+    \textbf{注记2}：不要忘记 $a<0$ 和 $b>0$；另外为了保证半平面交有界，
+    我们要在非常左、非常上的地方各加一条边界线；本题卡精度到令人发指，祝诸君顺利！
 \end{frame}
 
 \section{随机增量法}
