@@ -249,7 +249,7 @@
     当然，扫描线也可以是从左往右扫的竖直直线，看个人习惯。
 \end{frame}
 
-\begin{frame}{[USACO5.5] 矩形周长Picture}
+\begin{frame}{值域离散化}
     \small
     如果坐标范围是 $[0,10^9]$ 怎么办？
 
@@ -325,6 +325,29 @@
     \vspace{1em}\pause
     这题暴力加各种优化其实可以过，数据很水，正解写起来细节非常多，
     大家量力而行。
+\end{frame}
+
+\begin{frame}{二维数点问题}
+    \small
+    给定平面上 $n\;(\leq 10^5)$ 个点 $(x_i,y_i)$，
+    以及 $m\;(\leq 10^5)$ 个矩形 $[l_i,r_i]\times [d_i,u_i]$，
+    问每个矩形包含了几个点（边界也算）。
+
+    \vspace{1em}
+    坐标范围 $[0,10^6]$（更大的话也可以离散化）。
+\end{frame}
+
+\begin{frame}{二维数点问题}
+    \small
+    一根线从左往右扫，碰到一个点就让位置 $y_i$ 加一；
+    碰到矩形左边界，就让答案 $\text{ans}_i-=\text{sum}(d_i,u_i)$；
+    碰到矩形右边界，就让答案 $\text{ans}_i+=\text{sum}(d_i,u_i)$。
+
+    \vspace{1em}\pause
+    注意当扫描线到达一个新位置时，正确的操作顺序应该是：处理左边界、处理加点、处理右边界。
+
+    \vspace{1em}
+    单点加、区间求和，用树状数组即可。
 \end{frame}
 
 \begin{frame}{[ARC077C] guruguru}
