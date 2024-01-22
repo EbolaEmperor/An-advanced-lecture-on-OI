@@ -1,0 +1,243 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A Beamer template for Ritsumeikan University       %
+% Author: Ming-Hao Xu (Xu Minghao)                   %
+% Date:   April 2022.                                %
+% LPPL Licensed.                                     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{beamer}
+\usepackage{hyperref}
+
+\usepackage[UTF8]{ctex}
+\usepackage[T1]{fontenc}
+
+% other packages
+\usepackage{latexsym,amsmath,xcolor,multicol,booktabs,calligra}
+\usepackage{graphicx,pstricks,listings,stackengine}
+\usefonttheme[onlymath]{serif}
+
+% dummy text; remove it when working on this template
+\usepackage{lipsum}
+
+\author{Ebola}
+\title{字符串进阶：扩展kmp}
+\institute{
+    Institute of Mathematics, \\
+    Zhejiang University.
+}
+\date{Jan, 2024}
+\usepackage{Ritsumeikan}
+
+% defs
+\def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
+\def\env#1{\texttt{\color{blue}\footnotesize #1}}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{halfgray}{gray}{0.55}
+
+\lstset{
+    basicstyle=\ttfamily\tiny,
+    keywordstyle=\bfseries\color{deepblue},
+    emphstyle=\ttfamily\color{deepred},    % Custom highlighting style
+    stringstyle=\color{deepgreen},
+    numbers=left,
+    numberstyle=\small\color{halfgray},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+}
+
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \tableofcontents[sectionstyle=show,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+\end{frame}
+
+\section{基础回顾}
+
+\begin{frame}{kmp算法}
+    \small
+
+    kmp算法解决的是单文本串、单模式串匹配问题，即：
+    给定文本串 $S$ 和模式串 $T$，求 $T$ 在 $S$ 中完整出现的所有位置。
+
+    \vspace{1em}
+    复杂度是 $O(n)$.
+\end{frame}
+
+\begin{frame}[fragile]{kmp算法}
+    \footnotesize
+    我们来回顾一下 kmp 算法的流程。
+    首先有一个 next 数组，我这里把它写成 $\pi$，定义如下：
+    \begin{equation*}
+        \pi(i)=\max \{k\;|\; T[1,...,k]=T[i-k+1,...,i],\; k=0,...,i-1\}
+    \end{equation*}
+
+    \vspace{1em}\pause
+    我们把 $T$（长$m$） 和 $S$（长$n$，$n>m$） 放到一起：
+    \verb|A = T#S|
+    
+    \vspace{1em}
+    对于一个位置 $i$，如果 $\pi(i)=m$，说明 $T$ 从 $i-m+1$ 位置开始出现；
+    反过来，如果 $T$ 从 $i-m+1$ 位置开始出现，那么一定 $\pi(i)=m$。
+    
+    \vspace{1em}
+    我们只要找到 $\pi(i)=m$ 的位置，然后就知道答案了。
+\end{frame}
+
+\begin{frame}[fragile]{kmp算法}
+    \footnotesize
+    现在考虑如何求 $\pi$ 数组。
+
+    最暴力的求法，$O(n^3)$：
+
+    \begin{lstlisting}[language=c++]
+for(int i = 1; i <= n; i++){
+    int k;
+    for(k = i-1; k >= 0; k--)
+        if(子串(1,...,k) == 子串(i-k+1,...,i))
+            break;
+    pi[i] = k;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{kmp算法}
+    \footnotesize
+    我们观察到：$\pi(i+1)\leq \pi(i)+1$，为什么？（举例说明）
+
+    \vspace{1em}\pause
+    借助这个观察，我们可以优化代码：
+    \begin{lstlisting}[language=c++]
+for(int i = 1; i <= n; i++){
+    int k;
+    for(k = pi[i-1]+1; k >= 0; k--)
+        if(子串(1,...,k) == 子串(i-k+1,...,i))
+            break;
+    pi[i] = k;
+}
+    \end{lstlisting}
+
+    这个复杂度是 $O(n^2)$
+\end{frame}
+
+\begin{frame}[fragile]{kmp算法}
+    \footnotesize
+    现在我们看这个集合：
+    \begin{equation*}
+        \mathcal{P}(i)=\{k\;|\; T[1,...,k]=T[i-k+1,...,i],\; k=0,...,i-1\}.
+    \end{equation*}
+    注意到 $\pi(i)=\max \mathcal{P}(i)$.
+
+    \vspace{1em}\pause
+    又注意到 $\pi(i)-1\in\mathcal{P}(i-1)$（为什么？）。
+    \pause 那么 $k$ 循环可以只遍历 $\mathcal{P}(i-1)$ 里的数，像这样：
+
+    \begin{lstlisting}[language=c++]
+pi[1] = 0;
+for(int i = 2; i <= n; i++){
+    int k;
+    for(k = max(P(i-1)); k >= 0; k=P(i-1)里面比k小的那个数)
+        if(A[k+1] == A[i])
+            break;
+    pi[i] = k + 1;
+}
+    \end{lstlisting}
+
+    \vspace{1em}\pause
+    注意到 $\mathcal{P}(i)$ 里面第二大的数是 $\pi(\pi(i))$，
+    第三大的数是 $\pi(\pi(\pi(i)))$，…… （为什么？）
+    所以上面的 $k$ 循环很好实现。总复杂度 $O(n)$.
+\end{frame}
+
+\begin{frame}{[HNOI2008] GT考试}
+
+    \small 
+    阿申准备报名参加 GT 考试，准考证号为 $N$ 位数$X_1,X_2…X_n\ (0\le X_i\le 9)$，他不希望准考证号上出现不吉利的数字。
+    
+    \vspace{1em}
+    他的不吉利数字$A_1,A_2,\cdots, A_m\ (0\le A_i\le 9)$ 有 $M$ 位，不出现是指 $X_1,X_2\cdots X_n$ 中没有恰好一段等于 $A_1,A_2,\cdots ,A_m$，$A_1$ 和 $X_1$ 可以为 $0$。
+
+    \vspace{1em}
+    阿申想知道不出现不吉利数字的号码有多少种，输出模 $K$ 取余的结果。
+
+    \vspace{1em}
+    $N\leq10^9$，$M\leq 20$，$K\leq1000$。
+\end{frame}
+
+\begin{frame}{[HNOI2008] GT考试}
+    \small 
+    设 $f_{i,j}$ 表示当前考虑到第 $i$ 位，其中末尾和 $A_1...A_m$ 匹配了 $j$ 位。
+
+    设 $g_{j,k}$ 表示当前末尾匹配了 $j$ 位，如果添加一个数字后能够匹配 $k$ 位，
+    有多少种添加数字的方案。这是一个可以预处理的数组。
+
+    \vspace{1em}\pause
+    我们得到转移方程：
+    \begin{equation*}
+        f_{i,j}=\sum_{k=0}^{m-1} f_{i-1,k}g_{k,j}.
+    \end{equation*}
+
+    显然可以用矩阵快速幂优化（应该都会吧？）。
+
+    \vspace{1em}\pause
+    $g$ 数组可以用 kmp 来算。枚举当前匹配长度 $j$，再枚举下一个数字 $c$，
+    用 next 数组算一下添加 $c$ 之后末尾匹配长度是多少（记为 $k$），然后令 $g_{j,k}++$.
+\end{frame}
+
+\section{扩展 kmp （Z 函数）}
+
+\begin{frame}{扩展 kmp （Z 函数）}
+    \small
+
+    对于一个长度为 $n$ 的字符串，定义 $z_i$ 表示 $s$ 与 $s[i...n]$ 的最长公共前缀长度。
+    这就是 \textbf{Z 函数}。
+
+    \vspace{1em}
+    在研究如何求 Z 函数之前，我们先来看看 Z 函数的应用。
+\end{frame}
+
+\begin{frame}[fragile]{字符串匹配}
+    \small
+
+    给定文本串 $S$ 和模式串 $T$，求 $T$ 在 $S$ 中完整出现的所有位置。
+
+    \pause\vspace{1em}
+    【解】令 \verb|A=T#S|，求出 $A$ 的 Z 函数，然后找到所有 $z_i=|T|$ 的位置即可。
+\end{frame}
+
+\begin{frame}[fragile]{本质不同的子串}
+    \small
+
+    给定文本串 $S$，现在往 $S$ 的开头添加一个字母 $c$，
+    问增加了几个本质不同的子串。
+
+    \pause\vspace{1em}
+    【解】求 $cS$ 的 Z 函数，取最大值 $z_\text{max}$，显然，
+    长度超过 $z_\text{max}$ 的前缀都是新增的本质不同子串（反之，
+    长度不超过 $z_\text{max}$ 的前缀都不是新增的本质不同子串）。
+\end{frame}
+
+\begin{frame}[fragile]{字符串的最小周期}
+    \small
+    给定一个长度为 $n$ 的字符串 $S$，
+    找到其最短的整周期，
+    即寻找一个最短的字符串 $T$，
+    使得 $S$ 可以被若干个 $T$ 拼接而成的字符串表示。
+
+    \pause\vspace{1em}
+    【解】求 $S$ 的 Z 函数，找到最小的 $n$ 的因数 $i$，满足 $i+z_i=n$.
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        {\Huge\calligra Thank You}
+    \end{center}
+\end{frame}
+
+\end{document}
