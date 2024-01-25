@@ -1,0 +1,216 @@
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% A Beamer template for Ritsumeikan University       %
+% Author: Ming-Hao Xu (Xu Minghao)                   %
+% Date:   April 2022.                                %
+% LPPL Licensed.                                     %
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\documentclass{beamer}
+\usepackage{hyperref}
+
+\usepackage[UTF8]{ctex}
+\usepackage[T1]{fontenc}
+
+% other packages
+\usepackage{latexsym,amsmath,xcolor,multicol,booktabs,calligra}
+\usepackage{graphicx,pstricks,listings,stackengine}
+\usefonttheme[onlymath]{serif}
+
+% dummy text; remove it when working on this template
+\usepackage{lipsum}
+
+\author{Ebola}
+\title{字符串进阶：AC自动机}
+\institute{
+    Institute of Mathematics, \\
+    Zhejiang University.
+}
+\date{Jan, 2024}
+\usepackage{Ritsumeikan}
+
+% defs
+\def\cmd#1{\texttt{\color{red}\footnotesize $\backslash$#1}}
+\def\env#1{\texttt{\color{blue}\footnotesize #1}}
+\definecolor{deepblue}{rgb}{0,0,0.5}
+\definecolor{deepred}{rgb}{0.6,0,0}
+\definecolor{deepgreen}{rgb}{0,0.5,0}
+\definecolor{halfgray}{gray}{0.55}
+
+\lstset{
+    basicstyle=\ttfamily\tiny,
+    keywordstyle=\bfseries\color{deepblue},
+    emphstyle=\ttfamily\color{deepred},    % Custom highlighting style
+    stringstyle=\color{deepgreen},
+    numbers=left,
+    numberstyle=\small\color{halfgray},
+    rulesepcolor=\color{red!20!green!20!blue!20},
+    frame=shadowbox,
+}
+
+
+\begin{document}
+
+\begin{frame}
+    \titlepage
+\end{frame}
+
+\begin{frame}
+    \tableofcontents[sectionstyle=show,subsectionstyle=show/shaded/hide,subsubsectionstyle=show/shaded/hide]
+\end{frame}
+
+\section{基础回顾}
+
+\begin{frame}{字典树（Trie）}
+    \small
+
+    字典树把所有的字符串存储在一棵树中，
+    可以方便地查询所有的前缀。
+
+    \vspace{1em}
+    我们来回顾一下字典树模板题。
+\end{frame}
+
+\begin{frame}[fragile]{字典树（Trie）}
+    \small
+
+    插入操作
+    \begin{lstlisting}[language=c++]
+int mapping(char c){
+    if(c>='A' && c<='Z') return c-'A';
+    else return c-'a'+26;
+}
+void insert(char s[]){
+    int n = strlen(s+1);
+    int cur = 0;
+    sz[0]++;
+    for(int i = 1; i <= n; i++){
+        int j = mapping(s[i]);
+        if(ch[cur][j]==0){
+            ch[cur][j] = tot;
+            tot++;
+        }
+        cur = ch[cur][j];
+        sz[cur]++;
+    }
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{字典树（Trie）}
+    \small
+
+    查询操作
+    \begin{lstlisting}[language=c++]
+int query(char s[]){
+    int cur = 0;
+    int n = strlen(s+1);
+    for(int i = 1; i <= n; i++){
+        int j = mapping(s[i]);
+        if(ch[cur][j]==0) return 0;
+        cur = ch[cur][j];
+    }
+    return sz[cur];
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{最大异或和问题}
+    \small
+
+    最大异或和问题是 Trie 的一个经典应用。
+
+    \vspace{1em}
+    给定 $n\;(\leq 10^5)$ 个数，所有数均不超过 $2^{31}-1$.
+    从中选两个数，使它们异或起来最大。 
+\end{frame}
+
+\begin{frame}{最大异或和问题}
+    \small
+
+    把所有的数都转化为 $31$ 位二进制数，高位不足则补零，
+    然后把二进制数当成字符串插入进 Trie 中。
+
+    \vspace{1em}\pause
+    现在，我们枚举 $x=a_i\;(i=1,...,n)$，来找一个数 $a_j$，使它和 $x$ 异或起来最大。
+
+    \vspace{1em}\pause
+    从高位到低位贪心，尽可能让异或和的高位为 $1$。例如：
+    如果 $x$ 最高位是 $0$，那么我们希望选出的 $a_j$ 最高位是 $1$，
+    这样异或起来最高位才会是 $1$，因此我们第一步从 Trie 的根节点
+    往 $1$ 的方向走。
+\end{frame}
+
+\begin{frame}[fragile]{最大异或和问题}
+    \small
+
+    总之，如果 $x$ 的第 $k$ 位是 $x_{k}$，那么这一步就尽量往 $x_{k}\;\text{xor}\; 1$
+    方向走，除非 Trie 不存在对应的分支，此时不得不往 $x_{k}$ 走。
+    最后代码像这样：
+    \begin{lstlisting}[language=c++]
+int query(int x){
+    int cur = 0;
+    const int n = 31;
+    for(int i = 1; i <= n; i++){
+        int j = (x >> (31-i)) & 1;
+        if(ch[cur][j^1]==0) cur = ch[cur][j];
+        else cur = ch[cur][j^1];
+    }
+    return val[cur];
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{第 k 大异或和问题}
+    \small
+
+    如果想对于给定的 $x$，找到一个 $a_i$，使 $x\oplus a_i$ 是
+    $x\oplus a_1,...,x\oplus a_n$ 中第 $k$ 大的数，应该如何写？
+
+    \pause
+    \begin{lstlisting}[language=c++]
+int query(int x, int k)
+{
+    int o=1;
+    int res=0;
+    for(int i=31;i>=0;i--)
+    {
+        int j=(x>>i)&1;
+        if(sz[ch[o][j^1]]>=k) o=ch[o][j^1],res|=1u<<i;
+        else k-=sz[ch[o][j^1]],o=ch[o][j];
+    }
+    return res;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}[fragile]{[十二省联考 2019] 异或粽子}
+    \small
+
+    给定 $n\;(\leq 5\times 10^5)$ 个数 $a_1,...,a_n$，选一个区间 $[l,r]$，将 $a_l,...,a_r$ 全部异或起来，
+    得到这个区间的权值。求权值前 $m\;(\leq 2\times 10^5)$ 大的区间权值之和。
+\end{frame}
+
+\begin{frame}[fragile]{[十二省联考 2019] 异或粽子}
+    \small
+
+    令 $b_i=a_1\oplus...\oplus a_i$，那么 $a_l\oplus...\oplus a_r=b_{l-1}\oplus b_r$，转化为两个数的异或，
+    可以用 Trie 解决。
+
+    \vspace{1em}\pause
+    具体地，先把 $b_0,...,b_n$ 的二进制插入 Trie 中。
+    接下来对每个 $b_i$ 找到一个 $b_j$ 使它和 $b_i$ 异或起来最大。
+
+    \vspace{1em}\pause
+    将这些值存进一个优先队列中。每次从优先队列取出最大的异或和，弹出，
+    如果它是 $b_i$ 和其它数的异或和中第 $k$ 大的，
+    就找到 $b_i$ 和其它数的异或和中第 $k+1$ 大的加入优先队列。
+    不断重复，直到弹出的数达到 $2m$ 个为止，最后答案要除以 $2$. （为什么？）
+\end{frame}
+
+\begin{frame}
+    \begin{center}
+        {\Huge\calligra Thank You}
+    \end{center}
+\end{frame}
+
+\end{document}
