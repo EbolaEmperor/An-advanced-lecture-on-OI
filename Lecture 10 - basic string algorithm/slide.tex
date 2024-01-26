@@ -400,6 +400,8 @@ void traval(char s[]){
     }
 }
     \end{lstlisting}
+
+    以后我们都用路径压缩的版本。
 \end{frame}
 
 \begin{frame}[fragile]{[P5357] 【模板】AC自动机}
@@ -459,6 +461,72 @@ void dfs(int u){
     然后再调用 dfs。
 \end{frame}
 
+\begin{frame}[fragile]{[SCOI2012] 喵星球上的点名}
+    \footnotesize
+    给定 $n$ 个文本串，$m$ 个模式串。
+    如果模式串 $T_i$ 是文本串 $S_j$ 的子串，则 $S_j$ 对 $T_i$ 产生 $1$ 的贡献。
+
+    \vspace{1em}
+    求每个文本串对几个模式串产生了贡献、每个模式串得到了几个文本串的贡献。
+
+    \vspace{1em}
+    模式串、文本串总长均不超过 $10^5$，\textbf{字符集大小为} $10^4$。
+\end{frame}
+
+\begin{frame}[fragile]{[SCOI2012] 喵星球上的点名}
+    \footnotesize
+    统计贡献和模板题（简单版）没啥区别，主要说一下字符集大小为 $10^4$ 怎么办。
+
+    \vspace{1em}\pause
+    肯定不能开一个 \verb|ch[100010][10010]|，会 MLE。
+    可以用 \verb|map|，不过个人建议用 \verb|unordered_map|：
+    \begin{lstlisting}[language=c++]
+unordered_map<int,int> ch[100010];
+    \end{lstlisting}
+
+    \vspace{1em}\pause
+    这时候我们不能写路径压缩了，要回归朴素写法。判断 $u$ 是否存在下一个字符 $c$
+    要用 \verb|ch[u].count(c)| 来判断。
+\end{frame}
+
+\begin{frame}[fragile]{[HNOI2006] 最短母串问题}
+    \footnotesize
+    给定  $n\;(\leq 12)$ 个字符串  $(S_1,S_2,...,S_n)$，长度均 $\leq 50$，
+    要求找到一个最短的字符串  $T$，
+    使得这  $n$ 个字符串  $(S_1,S_2,...,S_n)$ 都是  $T$ 的子串。
+\end{frame}
+
+\begin{frame}[fragile]{[HNOI2006] 最短母串问题}
+    \footnotesize
+    对于一个节点 $u$，如果它对应的串是一个模式串，我们就称它为“关键点”。
+
+    \vspace{.7em}
+    如果有一个串在 travel 过程中可以经过所有关键点，
+    那么所有的模式串都是它的子串。
+
+    \vspace{.7em}
+    找一个最短的、在 travel 过程中可以经过所有关键点的串。
+
+    \vspace{.7em}\pause
+    我们令第 $i$ 个模式串对应的关键点权值为 $2^{i-1}$，非关键点权值为 $0$，
+    我们在 travel 的过程中，把经过的点的权值或起来，
+    最后达到 $2^n-1$ 时，就经过了所有关键点。
+
+    \vspace{.7em}\pause
+    出于 “最短” 考虑，我们可以 bfs，令当前串为 $T$，当前 travel 到的节点为 $u$，
+    当前权值或为 $st$，记为状态 $(T,u,st)$。
+    \pause 如果存在另一个状态 $(T',u,st)$ 且 $|T'|<|T|$，
+    那么状态 $(T,u,st)$ 就是没用的。
+    \pause 所以我们可以用一个数组 \verb|vis[u][st]|，
+    当状态 $(*,u,st)$ 第一次产生时，就令 \verb|vis[u][st]=true|，
+    下一次再到达 $(*,u,st)$ 时，根据 bfs 的性质，此时的串肯定比第一次时的串更长，
+    因此这一次的状态是没用的，可以剪掉。
+
+    \vspace{.7em}\pause
+    由于每一对 $(u,st)$ 只会被访问一次，所以复杂度是 $O(nL\cdot 2^n)$. 
+    题目要求输出方案，所以在 bfs 的过程中还要做一些额外的标记，请自己尝试完成。
+\end{frame}
+
 \begin{frame}[fragile]{[HNOI2004] L语言}
     \footnotesize
     标点符号的出现晚于文字的出现，所以以前的语言都是没有标点的。现在你要处理的就是一段没有标点的文章。  
@@ -471,6 +539,9 @@ void dfs(int u){
     
     \vspace{1em}
     给定一个字典 $D$，你的程序需要判断若干段文章在字典 $D$ 下是否能够被理解。并给出其在字典 $D$ 下能够被理解的最长前缀的位置。
+
+    \vspace{1em}
+    数据范围：字典里最多 $20$ 个单词，每个单词长度 $\leq 20$，文章长度 $\leq 2\times10^6$.
 \end{frame}
 
 \begin{frame}[fragile]{[HNOI2004] L语言}
@@ -482,10 +553,223 @@ void dfs(int u){
         f_i=\text{or}\; f_j,\quad j=i-|S_p|,\; \text{其中} p\in \mathcal{F}(u),\; \text{且} S_p\in D.
     \end{equation*}
 
-    这样就得到了一种跳 fail 转移的做法，但可能被卡成 $O(n^2)$.
+    这样就得到了一种跳 fail 转移的做法，复杂度 $O(m \cdot |T| \cdot |s|)$，卡不过去。
 
     \vspace{1em}\pause
     注意到题目有一个特殊性质：单词长度 $\leq 20$.
+\end{frame}
+
+\begin{frame}[fragile]{[HNOI2004] L语言}
+    \footnotesize
+
+    维护一个 21 位二进制数 \verb|status|，表示 $T[i]$ 往前几位是可以的划分点。
+    举例而言，如果 $T[1,i-1],T[1,i-5],T[1,i-9]$ 是可以被字典理解的，那么
+    
+    \verb|status = 00000 00000 01000 10001 0|
+
+    \vspace{1em}\pause
+    我们对每一个节点 $u$ 也维护一个二进制数 \verb|g[u]|，表示 $u$ 沿着 fail 树一直往上跳
+    可以经过哪些\textbf{字典中的单词}的长度（我们认为空串也是字典中的单词）。
+
+    \vspace{1em}
+    举例而言，如果 $|S_u|=17$, $|S_{fail[u]}|=5$, $|S_{fail[fail[u]]}|=3$, 
+    $fail[fail[fail[u]]]=0$，但是 $S_{fail[fail[u]]}\notin D$，
+    那么
+
+    \verb|g[u] = 00010 00000 00000 10000 1|
+
+    \vspace{1em}\pause
+    如果 travel 过程中，处理到 $T[i]$ 时位于节点 $u$，
+    此时只要 \verb|status| 和 \verb|g[u]| 有相同的一位为 $1$，
+    那么 $T[1,i]$ 就是可以被字典理解的。
+
+    \vspace{1em}\pause
+    例如在上述例子中，它们从右往左第 5 位 (0-index) 均为 $1$，对应的情况
+    就是 $T[1,i-5]$ 可以被字典理解，同时字典中恰好有一个长为 $5$ 的单词等于 $T[i-4,i]$，
+    因此 $T[1,i]$ 可以被字典理解。
+\end{frame}
+
+\begin{frame}[fragile]{[HNOI2004] L语言}
+    \footnotesize
+
+    求 \verb|g[u]| 的过程可以写在 \verb|getfail| 里面，像这样：
+
+    \begin{lstlisting}[language=c++]
+void getfail(){
+    queue<int> q;
+    for(int c = 0; c < 26; c++){
+        int v = ch[0][c];
+        if(v) q.push(v), g[v] = 1<<len[v];
+    }
+    while(!q.empty()){
+        int u = q.front(); q.pop();
+        int f = fail[u];
+        for(int c = 0; c < 26; c++){
+            int& v = ch[u][c];
+            if(!v) v = ch[f][c];
+            else{
+                fail[v] = ch[f][c];
+                g[v] = g[fail[v]] | (1<<len[v]);
+                q.push(v);
+            }
+        }
+    }
+}
+    \end{lstlisting}
+
+    其中 \verb|len[u]| 在 $S_u\in D$ 时等于 $|S_u|$，在 $S_u\notin D$ 时等于 $0$.
+\end{frame}
+
+\begin{frame}[fragile]{[HNOI2004] L语言}
+    \footnotesize
+
+    最后 travel 的过程就像这样：
+
+    \begin{lstlisting}[language=c++]
+int traval(char s[]){
+    int n = strlen(s+1), u = 0, status = 1, ans = 0;
+    for(int i = 1; i <= n; i++){
+        int c = s[i] - 'a';
+        u = ch[u][c];
+        status <<= 1;
+        if(status & g[u])
+            status |= 1, ans = i;
+    }
+    return ans;
+}
+    \end{lstlisting}
+\end{frame}
+
+\begin{frame}{[JSOI2009] 有趣的游戏}
+    \footnotesize
+
+    小阳阳发明了一个有趣的游戏：有 $n$ 个玩家，每个玩家都有一个长度为 $l$ 的字母序列，任何两个玩家的字母序列不同。共有 $m$ 种不同的字母，所有的字母序列都由这 $m$ 种字母构成。为了方便，我们取大写字母的前 $m$ 个字母。   
+    
+    \vspace{1em}
+    例如 $m=3,l=4,\texttt{ABAA}$ 和 $\texttt{CBCA}$ 是两个合法的字母序列。       
+    
+    \vspace{1em}
+    现在由小阳阳来操控一台神奇的机器，每个时刻机器会随机产生一个字母，其中第 $i$ 种字母随机出来的概率为 $\dfrac{p_i}{q_i}$ ，显然 $\sum \limits_{k=1}^m \dfrac{p_i}{q_i}=1$。  
+    
+    \vspace{1em}
+    这样 $T$ 个时刻后机器会产生一个长度为 $T$ 的字母序列。  
+    
+    \vspace{1em}
+    如果某个时刻某个玩家发现自己的字母序列在机器产生的字母序列中出现了，“出现”的定义是玩家的字母序列是机器产生的字母序列中连续的一段，那么我们称这个玩家获胜，游戏结束。       
+    
+    \vspace{1em}
+    现在小阳阳感兴趣的一个问题是，每个玩家分别有多大的概率能获得这场游戏的胜利呢？
+
+    \vspace{1em}
+    数据范围：$n,l,m\leq 10$.
+\end{frame}
+
+\begin{frame}[fragile]{[JSOI2009] 有趣的游戏}
+    \footnotesize
+
+    构造一个路径压缩版的AC自动机，问题转化为：从根节点出发，每次按某种概率随机
+    跳入下一个点，当跳到的节点恰好对应某个玩家的串时，游戏停止，该玩家获胜。
+    
+    \vspace{1em}\pause
+    假如当前在 $u$ 节点，
+    那么添加一个字母 $i$ 的概率是 $\frac{p_i}{q_i}$，因此
+    下一步走到 $v$ 的概率是
+    \begin{equation*}
+        P_{u,v}=\sum_{1\leq i\leq m,\; ch[u][i]=v} \frac{p_i}{q_i}.
+    \end{equation*}
+
+    \vspace{1em}\pause
+    特别地，如果 $u$ 恰好对应某个玩家的串，那么就没有下一步了；换言之，以后会一直停在 $u$。所以
+    \begin{equation*}
+        P_{u,u}=1,\;P_{u,v}=0(v\neq u),\quad \text{若} u \text{恰好对应某个玩家的串}
+    \end{equation*}
+
+    \vspace{1em}\pause
+    现在，把 $P$ 当成一个矩阵，$P^k_{u,v}$ 就表示从节点 $u$ 出发，经过 $k$ 步后到达节点 $v$ 的概率。
+    显然我们要求的就是 $P^\infty_{0,p_i}$ （$p_i$ 是第 $i$ 个玩家的串对应的节点）。
+    
+    \vspace{1em}\pause
+    因为题目要求保留两位小数输出，并非精确输出，我们可以用很大的数来代替 $\infty$。
+    例如可以取 $\infty=2^50$，这样只要重复做 50 次 \verb|P=P*P| 即可。
+\end{frame}
+
+\begin{frame}[fragile]{[COCI2015] Divljak}
+    \footnotesize
+
+    Alice 有 $n$ 个字符串 ${S}_1, {S}_2, \ldots, {S}_n$，Bob 有一个字符串集合 ${T}$，一开始集合是空的。
+    接下来会发生 $q$ 个操作，操作有两种形式：
+
+    \begin{enumerate}
+        \item \verb|1 P|：Bob 往自己的集合里添加了一个字符串 ${P}$。
+        \item \verb|2 x|：Alice 询问 Bob，集合 ${T}$ 中有多少个字符串包含串 ${S}_x$
+        （我们称串 ${A}$ 包含串 ${B}$，当且仅当 ${B}$ 是 ${A}$ 的子串）。
+    \end{enumerate}
+
+    \vspace{1em}
+    对于 $100\%$ 的数据，$1 \leq n,q \leq 10^5$，字符串由小写字母构成，$S$ 和 $P$ 的总长分别 $\le 2 \times 10^6$。
+\end{frame}
+
+\begin{frame}[fragile]{[COCI2015] Divljak}
+    \footnotesize
+
+    先对 Alice 的所有串建立AC自动机。现在考虑 Bob 添加一个字符串 $P$。
+
+    \vspace{1em}\pause
+    设 $P$ 在 travel 的过程中依次经过节点 $u_1,...,u_k$，那么在AC自动机上，
+    $P$ 包含的所有串就是 $\mathcal{F}(u_1)\cup\cdot\cup \mathcal{F}(u_k)$.
+    我们希望对这些点都进行 $+1$ 操作，然后对于 Alice 的询问，直接输出 $S_x$ 对应节点的权值即可。
+
+    \vspace{1em}\pause
+    首先对 fail 数组建立树结构（下面的 dfs 序、lca，均指 fail 树，而不是字典树）。
+    将 $u_1,...,u_k$ 按 dfs 序排序，并去重。
+    现在用树上差分的思想，对 $u_1,...,u_k$ 打上 $+1$ 标记，再对 $lca(u_1,u_2), lca(u_2,u_3),..., lca(u_{k-1},u_k)$
+    打上 $-1$ 标记。然后如果想知道一个点 $x$ 的权值，只要把 $x$ 子树里的所有标记加起来即可（子树对应 dfs 序里的一个区间）。
+
+    \vspace{1em}\pause
+    单点标记、区间求和，可以用树状数组完成。求 lca 需要倍增（或者树链剖分）。
+\end{frame}
+
+\begin{frame}[fragile]{[NOI2011] 阿狸的打字机}
+    \footnotesize    
+    阿狸喜欢收藏各种稀奇古怪的东西，最近他淘到一台老式的打字机。打字机上只有 $28$ 个按键，
+    分别印有 $26$ 个小写英文字母和 `B`、`P` 两个字母。经阿狸研究发现，这个打字机是这样工作的：
+    \begin{itemize}
+        \item 输入小写字母，这个字母会加在凹槽的最后。
+        \item 按一下印有 \verb|B| 的按键，打字机凹槽中最后一个字母会消失。
+        \item 按一下印有 \verb|P| 的按键，打字机会在纸上打印出凹槽中现有的所有字母并换行，但凹槽中的字母不会消失。
+    \end{itemize}
+    例如，阿狸输入 \verb|aPaPBbP|，纸上被打印的字符如下：
+\begin{lstlisting}
+a
+aa
+ab
+\end{lstlisting}
+    我们把纸上打印出来的字符串从 $1$ 开始顺序编号，一直到 $n$。打字机有一个非常有趣的功能，
+    在打字机中暗藏一个带数字的小键盘，在小键盘上输入两个数 $(x,y)$（其中 $1\leq x,y\leq n$），
+    打字机会显示第 $x$ 个打印的字符串在第 $y$ 个打印的字符串中出现了多少次。
+    请你实现这个功能。
+
+    \vspace{.5em}
+    对于 $100\%$ 的数据，$1\leq n\leq 10^5$，$1\leq m\leq10^5$，第一行总长度 $\leq 10^5$。
+\end{frame}
+
+\begin{frame}[fragile]{[NOI2011] 阿狸的打字机}
+    \footnotesize
+
+    假设第 $y$ 个字符串在 travel 的过程中依次经过 $u_1,...,u_k$，
+    我们对 $\mathcal{F}(u_1),...,\mathcal{F}(u_k)$ 分别执行 $+1$ 操作，
+    那么现在任意一个点 $p$ 的权值就表示 $S_p$ 在第 $y$ 个字符串中出现了几次。
+    （注意和上一题对比！）
+
+    \vspace{1em}\pause
+    同样用树上差分，我们对 $u_1,...,u_k$ 打上 $+1$ 标记，每一个点的权值就是
+    它子树上所有标记之和。仍然用树状数组维护。
+
+    \vspace{1em}\pause
+    我们把所有询问按 $y$ 从小到大排序，然后模拟阿狸的打字过程。每打一个小写字母，
+    就走一步，然后打上新的 $+1$ 标记；每打一个回格，就把当前点的 $+1$ 标记清除
+    （即打上 $-1$ 标记）；每打一个输出，就枚举 $y$ 为当前输出串的那些询问，
+    求第 $x$ 个输出串对应节点的权值。
 \end{frame}
 
 \begin{frame}
