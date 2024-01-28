@@ -1,107 +1,112 @@
-// [JSOI2018] 战争
 #include <bits/stdc++.h>
 using namespace std;
 
-const int N = 100010;
-const double eps=1e-6;
 struct Point{
-	int x, y;
-	Point(int x=0, int y=0): x(x), y(y) {}
-    long long len2() const{
+    int x, y;
+    Point(int x=0, int y=0): x(x),y(y) {}
+    long long len2(){
         return (long long) x * x + (long long) y * y;
     }
 };
+#define Vector Point
 
-Point operator + (const Point &a, const Point &b){
-    return Point(a.x + b.x, a.y + b.y);
+Vector operator + (const Point &a, const Point &b){
+    return Vector(a.x+b.x, a.y+b.y);
 }
 
-Point operator - (const Point &a, const Point &b){
-    return Point(a.x - b.x, a.y - b.y);
-}
-
-bool operator < (const Point &a, const Point &b){
-    return a.x < b.x || (a.x == b.x && a.y < b.y);
+Vector operator - (const Point &a, const Point &b){
+    return Vector(a.x-b.x, a.y-b.y);
 }
 
 long long cross(const Point &a, const Point &b){
     return (long long) a.x * b.y - (long long) a.y * b.x;
 }
 
-bool cmpPolar(const Point &a, const Point &b){
-    const long long c = cross(a, b);
-    return c > 0 || c == 0 && a.len2() < b.len2();
+bool operator < (const Point &a, const Point &b){
+    return a.x<b.x || a.x==b.x && a.y<b.y;
 }
 
-int ConvexHull(Point a[], const int &n, Point b[]){
-    sort(a, a + n);
-    int m = -1;
-    for(int i = 0; i < n; i++){
-        while(m >= 1 && cross(b[m]-b[m-1], a[i]-b[m-1]) <= 0) --m;
-        b[++m] = a[i];
+bool cmp(const Vector &v1, const Vector &v2){
+    return cross(v1, v2) > 0;
+}
+
+int getconvex(Point p[], int n, Point ch[]){
+    sort(p+1, p+1+n);
+    int m = 0;
+    for(int i = 1; i <= n; i++){
+        while(m >= 2 && cross(ch[m]-ch[m-1], p[i]-ch[m-1]) <= 0) m--;
+        ch[++m] = p[i];
     }
     int k = m;
-    for(int i = n-2; i >= 0; i--){
-        while(m > k && cross(b[m]-b[m-1], a[i]-b[m-1]) <= 0) --m;
-        b[++m] = a[i];
+    for(int i = n-1; i >= 1; i--){
+        while(m > k && cross(ch[m]-ch[m-1], p[i]-ch[m-1]) <= 0) m--;
+        ch[++m] = p[i];
     }
-    return m;
+    if(m == 1) return 1;
+    return m-1;
 }
 
-int Minkovski(Point A[], Point ch1[], Point ch2[], const int &n, const int &m){
-    for(int i = 0; i < n; i++)
-        A[i+1] = ch1[(i+1)%n] - ch1[i];
-    for(int i = 0; i < m; i++)
-        A[n+i+1] = ch2[(i+1)%m] - ch2[i];
-    A[0] = ch1[0] + ch2[0];
-    inplace_merge(A+1, A+n+1, A+n+m+1, &cmpPolar);
-    for(int i = 1; i <= n+m; i++)
-        A[i] = A[i-1] + A[i]; // 把向量恢复成顶点
+int Minkovski(Point ch1[], int n1, Point ch2[], int n2, Point mink[]){
+    for(int i = 1; i < n1; i++)
+        mink[i] = ch1[i+1] - ch1[i];
+    mink[n1] = ch1[1] - ch1[n1];
+    for(int i = 1; i < n2; i++)
+        mink[n1+i] = ch2[i+1] - ch2[i];
+    mink[n1+n2] = ch2[1] - ch2[n2];
+    inplace_merge(mink+1, mink+1+n1, mink+1+n1+n2, cmp);
 
-    // 去除共线顶点
-    int tot = 2;
-    for(int i = 2; i <= n+m; i++){
-        if(cross(A[tot-1]-A[tot-2], A[i]-A[tot-1]) == 0) tot--;
-        A[tot++] = A[i];
+    int tot = 1;
+    for(int i = 2; i <= n1+n2; i++){
+        if(cross(mink[i], mink[tot]) == 0)
+            mink[tot] = mink[tot] + mink[i];
+        else
+            mink[++tot] = mink[i];
     }
-    return tot - 1;
+
+    mink[0] = ch1[1] + ch2[1];
+    for(int i = 1; i <= tot; i++)
+        mink[i] = mink[i-1] + mink[i];
+    return tot;
 }
 
-// 判断 p 是否在凸包 ch 内，要求 ch 的第一个顶点是原点
-bool inconvex(Point ch[], const int &n, const Point &p){
-    assert(ch[0].x == 0 && ch[0].y == 0);
-    if(cross(ch[1], p) < 0 || cross(ch[n-1], p) > 0) return false;
+bool inconvex(Point ch[], int m, Point w){
+    assert(ch[1].x == 0 && ch[1].y == 0);
+    if(cross(ch[2],w) < 0 || 
+       cross(ch[2],w) == 0 && ch[2].len2() < w.len2()) return false;
+    if(cross(ch[m],w) > 0 || 
+       cross(ch[m],w) == 0 && ch[m].len2() < w.len2()) return false;
     
-    int i = lower_bound(ch+1, ch+n, p, cmpPolar) - ch;
-    assert(i >= 1 && i < n);
-    if(cross(ch[i], p) == 0) return p.len2() <= ch[i].len2();
-    else return cross(ch[i] - ch[i-1], p - ch[i-1]) >= 0;
+    int j = lower_bound(ch+2, ch+1+m, w, cmp) - ch;
+    assert(j >= 2 && j <= m);
+    return cross(ch[j] - ch[j-1], w - ch[j-1]) >= 0;
 }
 
 int main(){
-    int n, m, q;
-    static Point p1[N], p2[N], ch1[N], ch2[N], preA[N], A[N];
-    scanf("%d%d%d", &n, &m, &q);
-    for(int i = 0; i < n; i++)
+    // freopen("jsoi.in", "r", stdin);
+    const int N = 100010;
+    static Point p1[N], p2[N], ch1[N], ch2[N], mink[N];
+    int n1, n2, q;
+    scanf("%d%d%d", &n1, &n2, &q);
+    for(int i = 1; i <= n1; i++)
         scanf("%d%d", &p1[i].x, &p1[i].y);
-    for(int i = 0; i < m; i++){
+    for(int i = 1; i <= n2; i++){
         scanf("%d%d", &p2[i].x, &p2[i].y);
         p2[i].x = -p2[i].x;
         p2[i].y = -p2[i].y;
     }
-    int chn = ConvexHull(p1, n, ch1);
-    int chm = ConvexHull(p2, m, ch2);
-    int sz = Minkovski(A, ch1, ch2, chn, chm);
+    int m1 = getconvex(p1, n1, ch1);
+    int m2 = getconvex(p2, n2, ch2);
+    int m = Minkovski(ch1, m1, ch2, m2, mink);
 
-    Point origin = A[0];
-    for(int i = 0; i < sz; i++)
-        A[i] = A[i] - origin;
+    Point origin = mink[1];
+    for(int i = 1; i <= m; i++)
+        mink[i] = mink[i] - origin;
 
-    Point p;
-    for(int i = 0; i < q; i++){
-        scanf("%d%d", &p.x, &p.y);
-        p = p - origin;
-        puts(inconvex(A, sz, p) ? "1" : "0");
+    while(q--){
+        Point w;
+        scanf("%d%d", &w.x, &w.y);
+        w = w - origin;
+        puts(inconvex(mink, m, w) ? "1" : "0");
     }
     return 0;
 }

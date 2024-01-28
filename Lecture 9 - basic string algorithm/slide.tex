@@ -395,7 +395,7 @@ void get_z(char s[], int z[]){
     \pause 对于第一种情况，可以借助 Z 函数 $O(r-l)$ 完成，因此总复杂度 $O(n^3)$.
 \end{frame}
 
-\begin{frame}[fragile]{[UVA11022] String Factoring（加强版）}
+\begin{frame}[fragile]{[CODECHEF] Chef and String}
     \small
     给定一个字符串 $S$，多组询问，每次给定一个整数 $k$，问
     在 $S$ 的所有子串中挑选出 $k$ 个完全一样的字符串有几种方案。
@@ -408,7 +408,7 @@ void get_z(char s[], int z[]){
     字符串长度 $\leq 5000$，询问总数 $\leq 10^5$.
 \end{frame}
 
-\begin{frame}[fragile]{[UVA11022] String Factoring（加强版）}
+\begin{frame}[fragile]{[CODECHEF] Chef and String}
     \small
     如果我们知道出现 $i$ 次的本质不同子串有多少个，记作 $f_i$，那么
     对于给定 $k$ 的询问，答案就是：
@@ -423,7 +423,7 @@ void get_z(char s[], int z[]){
     现在来考虑如何计算数组 $f$。
 \end{frame}
 
-\begin{frame}[fragile]{[UVA11022] String Factoring（加强版）}
+\begin{frame}[fragile]{[CODECHEF] Chef and String}
     \small
     问题：求出现 $i$ 次的本质不同子串有多少个（$f_i$）。
 
@@ -447,7 +447,7 @@ for(int i = 1; i <= maxidx; i++)
     现在关键是求出 \verb|idx| 数组。
 \end{frame}
 
-\begin{frame}[fragile]{[UVA11022] String Factoring（加强版）}
+\begin{frame}[fragile]{[CODECHEF] Chef and String}
     \small
     问题：求 \verb|idx[l][r]| 表示 $S[l,r]$ 是第几个本质不同的子串。
     （内容相同但位置不同的子串应该有相同的编号）
