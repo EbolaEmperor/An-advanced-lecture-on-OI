@@ -3,121 +3,112 @@ using namespace std;
 
 struct Point{
     double x, y;
-    Point(double x=0, double y=0): x(x), y(y) {}
-} p[1005], vtx[1005];
-typedef Point Vector;
+    Point(double x=0, double y=0): x(x),y(y) {}
+    double len() const{
+        return sqrt(x * x + y * y);
+    }
+};
+#define Vector Point
 
-Point operator + (const Point &a, const Point &b){
-    return Point(a.x + b.x, a.y + b.y);
+Vector operator * (const double &a, const Point &b){
+    return Vector(a*b.x, a*b.y);
 }
-Point operator - (const Point &a, const Point &b){
-    return Point(a.x - b.x, a.y - b.y);
+Vector operator + (const Point &a, const Point &b){
+    return Vector(a.x+b.x, a.y+b.y);
 }
-Point operator * (const double &k, const Point &a){
-    return Point(a.x * k, a.y * k);
-}
-Point operator / (const Point &a, const double &k){
-    return Point(a.x / k, a.y / k);
+Vector operator - (const Point &a, const Point &b){
+    return Vector(a.x-b.x, a.y-b.y);
 }
 
-double cross(Point a,Point b){return a.x*b.y-a.y*b.x;}
+double cross(const Point &a, const Point &b){
+    return a.x * b.y - a.y * b.x;
+}
+double dot(const Point &a, const Point &b){
+    return a.x * b.x + a.y * b.y;
+}
 
 int dcmp(double x){
-    static const double eps = 1e-12;
-    if(fabs(x) <= eps) return 0;
+    if(fabs(x) < 1e-12) return 0;
     else if(x<0) return -1;
     else return 1;
 }
+bool operator < (const Point &a, const Point &b){
+    return dcmp(a.x-b.x)<0 || dcmp(a.x-b.x)==0 && dcmp(a.y-b.y)<0;
+}
 
 struct Line{
-    Point a;   // 直线上一点
-    Vector v;  // 方向向量
+    Point A;
+    Vector v;
+    double polar;
     Line(){}
-    Line(const Point &a, const Vector &v):
-        a(a), v(v) {}
-    double polar() const{
-        return atan2(v.y, v.x);
+    Line(const Point &A, const Point &B): 
+        A(A), v(B-A), polar(atan2(v.y, v.x)) {}
+    bool notleft(const Point &B) const{
+        return dcmp(cross(v, B-A)) <= 0;
     }
-    bool onleft(const Point &p) const{
-        return dcmp(cross(v, p-a)) > 0;
-    }
-    Point crosspoint(const Line& b) const{
-        double a1 = cross(b.v, a - b.a);
-        double a2 = cross(b.v, a+v - b.a);
-        return a + a1 / (a1 - a2) * v;
-    }
-} l[1005];
+};
 
-bool operator < (const Line &a, const Line &b){
-    double x = a.polar(), y = b.polar();
-    // 极角更小，或极角相等但是 a 在 b 左侧
-    return dcmp(x-y) < 0 || dcmp(x-y) == 0
-           && b.onleft(a.a);
+bool operator < (const Line &l, const Line &r){
+    return dcmp(l.polar - r.polar) < 0
+        || dcmp(l.polar - r.polar) == 0
+        && dcmp(cross(l.v, r.A - l.A)) < 0;
 }
 
-int tot = 0;
-
-int get_halfplane(Line l[], int tot, Point vertex[]){
-    // 按极角排序，极角相等的从左到右排
-    sort(l, l + tot);
-
-    // 去重，如果有极角相同的直线，只保留最左侧的那条
-    const int tot_pre = tot;
-    tot = 0;
-    for(int i = 0; i < tot_pre; i++){
-        if(i && dcmp(l[i].polar() - l[i-1].polar()) == 0) continue;
-        l[tot++] = l[i];
-    }
-
-    deque<Line> line_que;
-    deque<Point> vertex_que;
-
-    line_que.push_back(l[0]);
-    line_que.push_back(l[1]);
-    vertex_que.push_back(l[0].crosspoint(l[1]));
-
-    for(int i = 2; i < tot; i++){
-        while(!vertex_que.empty() && !l[i].onleft(vertex_que.back()))
-            vertex_que.pop_back(), line_que.pop_back();
-        while(!vertex_que.empty() && !l[i].onleft(vertex_que.front()))
-            vertex_que.pop_front(), line_que.pop_front();
-        vertex_que.push_back(l[i].crosspoint(line_que.back()));
-        line_que.push_back(l[i]);
-    }
-    while(!vertex_que.empty() && !line_que.front().onleft(vertex_que.back()))
-        vertex_que.pop_back(), line_que.pop_back();
-    if(line_que.size() == 1) return 0;
-    vertex_que.push_back(line_que.back().crosspoint(line_que.front()));
-
-    int res = 0;
-    while(!vertex_que.empty())
-        vertex[res++] = vertex_que.front(), vertex_que.pop_front();
-    return res;
+Point LineIns(const Line &l, const Line &r){
+    double a1 = cross(r.v, l.A-r.A);
+    double a2 = cross(r.v, l.A+l.v-r.A);
+    double lam = a1 / (a1 - a2);
+    return l.A + lam * l.v;
 }
 
-double get_area(Point p[], const int &m){
-    if(m < 3) return 0;
-    double ans = 0;
-    for(int i = 1; i < m-1; i++){
-        ans += cross(p[i]-p[0], p[i+1]-p[0]);
+int halfplane(Line l[], int n, Line hp[], Point ins[]){
+    sort(l+1, l+1+n);
+    int tot = 0;
+    for(int i = 1; i <= n; i++){
+        if(tot && dcmp(l[i].polar-l[tot].polar) == 0) continue;
+        l[++tot] = l[i];
     }
-    return ans / 2;
+
+    int pl = 1, pr = 0;
+    for(int i = 1; i <= tot; i++){
+        while(pr-pl >= 1 && l[i].notleft(ins[pr])) pr--;
+        while(pr-pl >= 1 && l[i].notleft(ins[pl+1])) pl++;
+        hp[++pr] = l[i];
+        if(pr - pl >= 1)
+            ins[pr] = LineIns(hp[pr], hp[pr-1]);
+    }
+    while(pr-pl >= 1 && hp[pl].notleft(ins[pr])) pr--;
+    if(pr - pl >= 2)
+        ins[pl] = LineIns(hp[pl], hp[pr]);
+    
+    for(int i = pl; i <= pr; i++)
+        hp[i-pl+1] = hp[i], ins[i-pl+1] = ins[i];
+    return pr - pl + 1;
+}
+
+double getarea(Point p[], int n){
+    double area = 0;
+    for(int i = 2; i <= n-1; i++){
+        area += cross(p[i]-p[1], p[i+1]-p[1]);
+    }
+    return area / 2;
 }
 
 int main(){
-    int n, m;
+    int n, m, tot = 0;
+    const int N = 510;
+    static Point p[N], ins[N];
+    static Line line[N], hp[N];
+
     scanf("%d", &n);
-    for(int i = 0; i < n; i++){
+    while(n--){
         scanf("%d", &m);
-        for(int j = 0; j < m; j++)
-            scanf("%lf%lf", &p[j].x, &p[j].y);
-        for(int j = 0; j < m; j++){
-            l[tot].a = p[j];
-            l[tot].v = p[(j+1)%m] - p[j];
-            tot++;
-        }
+        for(int i = 1; i <= m; i++)
+            scanf("%lf%lf", &p[i].x, &p[i].y);
+        for(int i = 1; i <= m; i++)
+            line[++tot] = Line(p[i], p[i%m+1]);
     }
-    m = get_halfplane(l, tot, vtx);
-    printf("%.3lf\n", get_area(vtx, m));
+    tot = halfplane(line, tot, hp, ins);
+    printf("%.3lf\n", getarea(ins, tot));
     return 0;
 }
