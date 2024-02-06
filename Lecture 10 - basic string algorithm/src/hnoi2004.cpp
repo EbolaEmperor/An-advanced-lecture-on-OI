@@ -2,7 +2,8 @@
 using namespace std;
 
 const int N = 1010;
-int ch[N][26], fail[N], g[N], len[N], tot = 0;
+unsigned g[N];
+int ch[N][26], fail[N], len[N], tot = 0;
 char T[2000010];
 
 void insert(char s[]){
@@ -19,7 +20,10 @@ void getfail(){
     queue<int> q;
     for(int c = 0; c < 26; c++){
         int v = ch[0][c];
-        if(v) q.push(v), g[v] = 1<<len[v];
+        if(v){
+            q.push(v);
+            if(len[v]) g[v] = 1<<len[v]-1;
+        }
     }
     while(!q.empty()){
         int u = q.front(); q.pop();
@@ -29,7 +33,8 @@ void getfail(){
             if(!v) v = ch[f][c];
             else{
                 fail[v] = ch[f][c];
-                g[v] = g[fail[v]] | (1<<len[v]);
+                g[v] = g[fail[v]];
+                if(len[v]) g[v] |= (1<<len[v]-1);
                 q.push(v);
             }
         }
@@ -37,13 +42,13 @@ void getfail(){
 }
 
 int traval(char s[]){
-    int n = strlen(s+1), u = 0, status = 1, ans = 0;
+    unsigned status = 1;
+    int n = strlen(s+1), u = 0, ans = 0;
     for(int i = 1; i <= n; i++){
         int c = s[i] - 'a';
         u = ch[u][c];
-        status <<= 1;
-        if(status & g[u])
-            status |= 1, ans = i;
+        if(status & g[u]) status = status<<1|1, ans = i;
+        else status <<= 1;
     }
     return ans;
 }

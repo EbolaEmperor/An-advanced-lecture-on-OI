@@ -282,7 +282,7 @@ void get_z(char s[], int n, int z[]) {
         \pause \item 否则，我们令 $z_i=r-i+1$，然后暴力枚举下一个字符扩展 $z_i$。
     \end{itemize}
 
-    \pause\vspace{.5em}\textbf{Case 1}($i> r$)：此时从 $S[i]$ 开始暴力枚举。
+    \pause\vspace{.5em}\textbf{Case 2}($i> r$)：此时从 $S[i]$ 开始暴力枚举。
 
     \pause\vspace{.5em}\textbf{注意}：如果求出 $z_i$ 后发现 $i+z_i-1>r$，则需要更新 $[l,r]$.（\href{https://personal.utdallas.edu/~besp/demo/John2010/z-algorithm.htm}{在线模拟}）
 \end{frame}

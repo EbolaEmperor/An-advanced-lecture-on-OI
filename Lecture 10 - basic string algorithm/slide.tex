@@ -565,7 +565,7 @@ unordered_map<int,int> ch[100010];
     维护一个 21 位二进制数 \verb|status|，表示 $T[i]$ 往前几位是可以的划分点。
     举例而言，如果 $T[1,i-1],T[1,i-5],T[1,i-9]$ 是可以被字典理解的，那么
     
-    \verb|status = 00000 00000 01000 10001 0|
+    \verb|status = 00000 00000 01000 10001|
 
     \vspace{1em}\pause
     我们对每一个节点 $u$ 也维护一个二进制数 \verb|g[u]|，表示 $u$ 沿着 fail 树一直往上跳
@@ -576,7 +576,7 @@ unordered_map<int,int> ch[100010];
     $fail[fail[fail[u]]]=0$，但是 $S_{fail[fail[u]]}\notin D$，
     那么
 
-    \verb|g[u] = 00010 00000 00000 10000 1|
+    \verb|g[u] = 00010 00000 00000 10000|
 
     \vspace{1em}\pause
     如果 travel 过程中，处理到 $T[i]$ 时位于节点 $u$，
@@ -584,7 +584,7 @@ unordered_map<int,int> ch[100010];
     那么 $T[1,i]$ 就是可以被字典理解的。
 
     \vspace{1em}\pause
-    例如在上述例子中，它们从右往左第 5 位 (0-index) 均为 $1$，对应的情况
+    例如在上述例子中，它们从右往左第 5 位均为 $1$，对应的情况
     就是 $T[1,i-5]$ 可以被字典理解，同时字典中恰好有一个长为 $5$ 的单词等于 $T[i-4,i]$，
     因此 $T[1,i]$ 可以被字典理解。
 \end{frame}
@@ -599,7 +599,10 @@ void getfail(){
     queue<int> q;
     for(int c = 0; c < 26; c++){
         int v = ch[0][c];
-        if(v) q.push(v), g[v] = 1<<len[v];
+        if(v){
+            q.push(v);
+            if(len[v]) g[v] = 1<<len[v]-1;
+        }
     }
     while(!q.empty()){
         int u = q.front(); q.pop();
@@ -609,7 +612,8 @@ void getfail(){
             if(!v) v = ch[f][c];
             else{
                 fail[v] = ch[f][c];
-                g[v] = g[fail[v]] | (1<<len[v]);
+                g[v] = g[fail[v]];
+                if(len[v]) g[v] |= (1<<len[v]-1);
                 q.push(v);
             }
         }
@@ -627,13 +631,13 @@ void getfail(){
 
     \begin{lstlisting}[language=c++]
 int traval(char s[]){
-    int n = strlen(s+1), u = 0, status = 1, ans = 0;
+    unsigned status = 1;
+    int n = strlen(s+1), u = 0, ans = 0;
     for(int i = 1; i <= n; i++){
         int c = s[i] - 'a';
         u = ch[u][c];
-        status <<= 1;
-        if(status & g[u])
-            status |= 1, ans = i;
+        if(status & g[u]) status = status<<1|1, ans = i;
+        else status <<= 1;
     }
     return ans;
 }
